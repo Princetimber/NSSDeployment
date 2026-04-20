@@ -1,0 +1,105 @@
+name: Bicep Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**.bicep'
+      - '**.bicepparam'
+      - '.github/workflows/bicep-deploy.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        default: dev
+        type: choice
+        options: [dev, staging, prod]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-dev:
+    name: Deploy to dev
+    runs-on: ubuntu-latest
+    environment: dev
+    if: github.event_name == 'push' || github.event.inputs.environment == 'dev'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Bicep lint
+        run: az bicep build --file main.bicep
+      - name: Deploy
+        run: |
+          az deployment group create \
+            --name deploy-dev-${{ github.run_number }} \
+            --resource-group rg-NSSDeployment-dev \
+            --template-file main.bicep \
+            --parameters environments/dev/main.bicepparam
+
+  deploy-staging:
+    name: Deploy to staging
+    runs-on: ubuntu-latest
+    environment: staging
+    needs: [deploy-dev]
+    # For push: only run after dev succeeds (sequential gate).
+    # For workflow_dispatch targeting staging: run independently (deploy-dev is skipped).
+    if: |
+      always() && (
+        (github.event_name == 'push' && needs.deploy-dev.result == 'success') ||
+        (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+      )
+    steps:
+      - uses: actions/checkout@v4
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Bicep lint
+        run: az bicep build --file main.bicep
+      - name: Deploy
+        run: |
+          az deployment group create \
+            --name deploy-staging-${{ github.run_number }} \
+            --resource-group rg-NSSDeployment-staging \
+            --template-file main.bicep \
+            --parameters environments/staging/main.bicepparam
+
+  deploy-prod:
+    name: Deploy to prod (requires approval)
+    runs-on: ubuntu-latest
+    environment: prod
+    needs: [deploy-staging]
+    # For push: only run after staging succeeds (sequential gate).
+    # For workflow_dispatch targeting prod: run independently (prior jobs are skipped).
+    if: |
+      always() && (
+        (github.event_name == 'push' && needs.deploy-staging.result == 'success') ||
+        (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'prod')
+      )
+    steps:
+      - uses: actions/checkout@v4
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Bicep lint
+        run: az bicep build --file main.bicep
+      - name: Deploy
+        run: |
+          az deployment group create \
+            --name deploy-prod-${{ github.run_number }} \
+            --resource-group rg-NSSDeployment-prod \
+            --template-file main.bicep \
+            --parameters environments/prod/main.bicepparam

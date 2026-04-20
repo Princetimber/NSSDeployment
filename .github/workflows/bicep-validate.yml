@@ -1,0 +1,49 @@
+name: Bicep Validate
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - '**.bicep'
+      - '**.bicepparam'
+      - '.github/workflows/bicep-validate.yml'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  validate:
+    name: Validate (${{ matrix.environment }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [dev, staging, prod]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Bicep lint
+        run: az bicep build --file main.bicep
+
+      - name: Validate (${{ matrix.environment }})
+        run: |
+          az deployment group validate \
+            --resource-group rg-NSSDeployment-${{ matrix.environment }} \
+            --template-file main.bicep \
+            --parameters environments/${{ matrix.environment }}/main.bicepparam
+
+      - name: What-if (${{ matrix.environment }})
+        run: |
+          az deployment group what-if \
+            --resource-group rg-NSSDeployment-${{ matrix.environment }} \
+            --template-file main.bicep \
+            --parameters environments/${{ matrix.environment }}/main.bicepparam
