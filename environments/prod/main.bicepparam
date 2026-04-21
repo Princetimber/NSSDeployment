@@ -66,8 +66,3 @@ param subnets            = ['subnet1', 'subnet2']
 // Public IP allowed to access the storage account (deployer or jump-host IP).
 param publicIpAddress    = '86.24.37.134'
 
-// ── Compute ────────────────────────────────────────────────────────────────────
-param vhdFileName = 'nssserver.vhd'
-param vmSize      = 'Standard_D4s_v3'
-// Subnet resource ID for the VM NIC — references subnet1 created by the networking module.
-param subnetId    = '/subscriptions/07940160-ad0c-43f6-a228-ed5f3baaf990/resourceGroups/rg-NSSDeployment-prod/providers/Microsoft.Network/virtualNetworks/vnet-nssdeployment-prod/subnets/subnet1'
