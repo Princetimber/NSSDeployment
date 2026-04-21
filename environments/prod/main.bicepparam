@@ -8,8 +8,8 @@ param projectName     = 'nssdeployment'
 // Key Vault: kv-nssdeployment-prod
 param sshPublicKeySecretName = 'ssh-public-key'
 // Replace with your public key (e.g. contents of ~/.ssh/id_rsa.pub).
-// For CI/CD use getSecret() once the Key Vault exists:
-//   param sshPublicKey = getSecret('<subscriptionId>', 'rg-NSSDeployment-prod', 'kv-nssdeployment-prod', 'ssh-public-key')
+// For CI/CD use getSecret() once the Key Vault exists and the secret is populated:
+//   param sshPublicKey = getSecret('07940160-ad0c-43f6-a228-ed5f3baaf990', 'rg-NSSDeployment-prod', 'kv-nssdeployment-prod', 'ssh-public-key')
 param sshPublicKey = ''
 
 // ── Networking ─────────────────────────────────────────────────────────────────
@@ -61,4 +61,10 @@ param natGatewaySubnets = [
 
 // ── Storage ────────────────────────────────────────────────────────────────────
 param storageAccountName = 'stnssdeploymentprod'
+
+// ── Compute ────────────────────────────────────────────────────────────────────
+param vhdSasUri      = 'https://znssprodeu.blob.core.windows.net/?sv=2024-11-04&ss=b&srt=sco&sp=rltfx&se=2026-10-28T16:15:57Z&st=2025-10-29T08:00:57Z&spr=https&sig=Znec6n%2FZMgnadybvpXHV0HXZXC7YPNcdydXwck1c8K4%3D'
+param storageAccountId = '/subscriptions/07940160-ad0c-43f6-a228-ed5f3baaf990/resourceGroups/rg-NSSDeployment-dev/providers/Microsoft.Storage/storageAccounts/znssprodeu'
+param subnetId       = '/subscriptions/07940160-ad0c-43f6-a228-ed5f3baaf990/resourceGroups/rg-NSSDeployment-prod/providers/Microsoft.Network/virtualNetworks/vnet-nssdeployment-prod/subnets/subnet1'
+param vmSize         = 'Standard_D4s_v3'
 

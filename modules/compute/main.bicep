@@ -22,10 +22,11 @@ param tags object = {
   Owner: ownerName
 }
 
-@description('Required: full URI of the VHD blob to import as the OS disk.')
-param vhdBlobUri string
+@description('Required: full SAS URI of the VHD blob to import (blob URL + SAS token).')
+@secure()
+param vhdSasUri string
 
-@description('Required: resource ID of the storage account holding the VHD.')
+@description('Required: resource ID of the source storage account holding the VHD.')
 param storageAccountId string
 
 @description('Required: resource ID of the subnet for the VM network interface.')
@@ -63,7 +64,7 @@ module nssServer './nssserver.bicep' = {
     nicName: nicName
     vmSize: vmSize
     osType: osType
-    vhdBlobUri: vhdBlobUri
+    vhdSasUri: vhdSasUri
     storageAccountId: storageAccountId
     subnetId: subnetId
   }

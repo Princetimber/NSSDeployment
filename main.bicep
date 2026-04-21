@@ -88,6 +88,66 @@ module storage './modules/storage/main.bicep' = {
   }
 }
 
+// ── Compute ───────────────────────────────────────────────────────────────────
+
+@description('Required: full SAS URI of the VHD blob to import (blob URL + SAS token).')
+@secure()
+param vhdSasUri string
+
+@description('Required: resource ID of the source storage account holding the VHD.')
+param storageAccountId string
+
+@description('Required: resource ID of the subnet for the VM network interface.')
+param subnetId string
+
+@description('Optional: VM size.')
+@allowed([
+  'Standard_DS1_v2'
+  'Standard_DS2_v2'
+  'Standard_DS3_v2'
+  'Standard_DS4_v2'
+  'Standard_DS5_v2'
+  'Standard_D2s_v3'
+  'Standard_D4s_v3'
+])
+param vmSize string = 'Standard_D2s_v3'
+
+module compute './modules/compute/main.bicep' = {
+  name: 'computeDeploy'
+  params: {
+    location: location
+    environmentName: environmentName
+    projectName: projectName
+    tags: tags
+    vhdSasUri: vhdSasUri
+    storageAccountId: storageAccountId
+    subnetId: subnetId
+    vmSize: vmSize
+  }
+  dependsOn: [networking]
+}
+
+// ── Key Vault role assignment ─────────────────────────────────────────────────
+// Grant the VM's system-assigned managed identity the Key Vault Secrets User role.
+
+var keyVaultSecretsUserRoleId = '4633458b-17de-408a-b874-0445c86b69e6'
+var kvName = 'kv-${toLower(projectName)}-${toLower(environmentName)}'
+var vmName = 'vm-${toLower(projectName)}-${toLower(environmentName)}'
+
+resource kv 'Microsoft.KeyVault/vaults@2025-05-01' existing = {
+  name: kvName
+}
+
+resource kvRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(resourceId('Microsoft.KeyVault/vaults', kvName), resourceId('Microsoft.Compute/virtualMachines', vmName), keyVaultSecretsUserRoleId)
+  scope: kv
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultSecretsUserRoleId)
+    principalId: compute.outputs.vmPrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
 // ── Outputs ───────────────────────────────────────────────────────────────────
 
 @description('Name of the resource group.')
@@ -113,4 +173,10 @@ output natGatewayPublicIpName string = networking.outputs.publicIpName
 
 @description('Storage account resource ID.')
 output storageAccountId string = storage.outputs.storageAccountId
+
+@description('Virtual machine resource ID.')
+output vmId string = compute.outputs.vmId
+
+@description('VM private IP address.')
+output nicPrivateIpAddress string = compute.outputs.nicPrivateIpAddress
 
