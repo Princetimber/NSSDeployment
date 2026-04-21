@@ -15,9 +15,11 @@ param sshPublicKey = ''
 
 // Zscaler hub IP ranges for outbound NSG rules — replace with ranges from your Zscaler admin portal.
 param destinationAddressPrefixes = [
-  '185.46.212.0/24'
-  '165.225.0.0/17'
-  '104.129.192.0/20'
+  '104.129.193.87'
+  '104.129.195.87'
+  '104.129.193.106'
+  '104.129.197.106'
+  '104.129.197.87'
 ]
 
 // Source = subnet CIDRs of this VNet (must match addressPrefixes in networkingSubnets below).
@@ -69,4 +71,3 @@ param storageNewOrExisting = 'existing'
 // (vnet-nssdeployment-prod / subnet1 + subnet2) — not needed as top-level params.
 param nic2PrivateIpAddress = '10.2.2.5'
 param vmSize       = 'Standard_D4s_v3'
-
