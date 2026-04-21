@@ -1,5 +1,5 @@
 // Module : storage
-// Purpose: Storage accounts and related data resources
+// Purpose: Storage account
 
 targetScope = 'resourceGroup'
 
@@ -18,15 +18,6 @@ param ownerName string = ''
 @description('Required: storage account name (3–24 lowercase alphanumeric).')
 param storageAccountName string
 
-@description('Required: name of the virtual network allowed to access the storage account.')
-param vnetName string
-
-@description('Required: subnet names allowed to access the storage account.')
-param subnets array
-
-@description('Required: public IP address allowed to access the storage account.')
-param publicIpAddress string
-
 module storageAccount './storage.bicep' = {
   name: '${projectName}-storage'
   params: {
@@ -34,9 +25,6 @@ module storageAccount './storage.bicep' = {
     location: location
     environmentName: environmentName
     ownerName: ownerName
-    vnetName: vnetName
-    subnets: subnets
-    publicIpAddress: publicIpAddress
   }
 }
 

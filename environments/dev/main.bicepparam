@@ -61,8 +61,4 @@ param natGatewaySubnets = [
 
 // ── Storage ────────────────────────────────────────────────────────────────────
 param storageAccountName = 'stnssdeploymentdev'
-param vnetName           = 'vnet-nssdeployment-dev'
-param subnets            = ['subnet1', 'subnet2']
-// Public IP allowed to access the storage account (deployer or jump-host IP).
-param publicIpAddress    = '86.24.37.134'
 

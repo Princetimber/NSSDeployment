@@ -78,15 +78,6 @@ module networking './modules/networking/main.bicep' = {
 @description('Required: storage account name (3–24 lowercase alphanumeric).')
 param storageAccountName string
 
-@description('Required: name of the virtual network allowed to access the storage account. Must match the VNet created by the networking module.')
-param vnetName string
-
-@description('Required: subnet names (strings) allowed to access the storage account via service endpoints. Must match subnet names in networkingSubnets.')
-param subnets array
-
-@description('Required: public IP address allowed to access the storage account.')
-param publicIpAddress string
-
 module storage './modules/storage/main.bicep' = {
   name: 'storageDeploy'
   params: {
@@ -94,12 +85,7 @@ module storage './modules/storage/main.bicep' = {
     environmentName: environmentName
     projectName: projectName
     storageAccountName: storageAccountName
-    vnetName: vnetName
-    subnets: subnets
-    publicIpAddress: publicIpAddress
   }
-  // VNet and subnets must exist before storage sets up service endpoint rules
-  dependsOn: [networking]
 }
 
 // ── Outputs ───────────────────────────────────────────────────────────────────

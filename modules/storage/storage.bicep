@@ -31,22 +31,6 @@ param tags object = {
   Owner: ownerName
 }
 
-@description('Required: name of the virtual network whose subnets are allowed access.')
-param vnetName string
-
-@description('Required: subnet names allowed to access the storage account.')
-param subnets array
-
-@description('Required: public IP address allowed to access the storage account.')
-param publicIpAddress string
-
-// Build the VNet rule list outside the resource to avoid ARM property-iteration
-// issues that arise when a for-loop sits inside a conditional resource's properties.
-var vnetRules = [for subnet in subnets: {
-  id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnetName, subnet)
-  action: 'Allow'
-}]
-
 resource storageAccount 'Microsoft.Storage/storageAccounts@2025-08-01' = {
   name: storageAccountName
   location: location
@@ -61,17 +45,6 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2025-08-01' = {
     minimumTlsVersion: 'TLS1_2'
     allowBlobPublicAccess: false
     allowSharedKeyAccess: true
-    networkAcls: {
-      bypass: 'AzureServices'
-      defaultAction: 'Deny'
-      virtualNetworkRules: vnetRules
-      ipRules: [
-        {
-          value: publicIpAddress
-          action: 'Allow'
-        }
-      ]
-    }
   }
 }
 
