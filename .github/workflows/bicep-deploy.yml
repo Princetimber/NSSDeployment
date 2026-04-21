@@ -461,7 +461,7 @@ jobs:
             BASTION="bas-nssdeployment-$env"
             if az network bastion show --resource-group "$rg" --name "$BASTION" &>/dev/null; then
               echo "Deleting Bastion $BASTION..."
-              az network bastion delete --resource-group "$rg" --name "$BASTION"
+              az network bastion delete --resource-group "$rg" --name "$BASTION" --yes
             fi
 
             # 6. VNet + subnets
