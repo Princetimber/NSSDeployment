@@ -95,6 +95,9 @@ resource storageAccountNew 'Microsoft.Storage/storageAccounts@2025-08-01' = if (
   properties: {
     accessTier: accessTier
     supportsHttpsTrafficOnly: true
+    minimumTlsVersion: 'TLS1_2'
+    allowBlobPublicAccess: false
+    allowSharedKeyAccess: true
     networkAcls: {
       bypass: 'AzureServices'
       defaultAction: 'Deny'
@@ -110,22 +113,6 @@ resource storageAccountNew 'Microsoft.Storage/storageAccounts@2025-08-01' = if (
           action: 'Allow'
         }
       ]
-    }
-    allowBlobPublicAccess: true
-    allowCrossTenantReplication: true
-    allowSharedKeyAccess: true
-    isNfsV3Enabled: false
-    isLocalUserEnabled: true
-    keyPolicy: {
-      keyExpirationPeriodInDays: 90
-    }
-    immutableStorageWithVersioning: {
-      enabled: true
-      immutabilityPolicy: {
-        immutabilityPeriodSinceCreationInDays: 30
-        allowProtectedAppendWrites: true
-        state: 'Unlocked'
-      }
     }
   }
 }
