@@ -56,8 +56,4 @@ module security './modules/security/main.bicep' = {
 }
 ```
 
-> **Note:** `sshPublicKey` is decorated `@secure()` and will never appear in deployment logs or outputs. For CI/CD pipelines, supply it via `getSecret()` once the Key Vault exists:
->
-> ```bicep
-> param sshPublicKey = getSecret('<subscriptionId>', 'rg-NSSDeployment-dev', 'kv-nssdeployment-dev', 'ssh-public-key')
-> ```
+> **Note:** `sshPublicKey` is decorated `@secure()` and will never appear in deployment logs or outputs. For CI/CD, supply it via the `SSH_PUBLIC_KEY` GitHub Actions environment secret — the workflow passes it with `--parameters "sshPublicKey=$SSH_PUBLIC_KEY"`.

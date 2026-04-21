@@ -3,30 +3,36 @@
 ## Ideal layout for this repo
 
 ```text
-UWMe/
+NSSDeployment/
 ├── main.bicep
 ├── bicepconfig.json
 ├── modules/
 │   ├── networking/
 │   │   ├── main.bicep
+│   │   ├── nsg.bicep
 │   │   ├── vnet.bicep
-│   │   └── nsg.bicep
-│   ├── storage/
-│   │   └── main.bicep
+│   │   └── natgw.bicep
 │   ├── security/
-│   │   └── main.bicep
+│   │   ├── main.bicep
+│   │   └── keyvault.bicep
+│   ├── storage/
+│   │   ├── main.bicep
+│   │   └── storage.bicep
 │   └── compute/
-│       └── main.bicep
+│       ├── main.bicep
+│       └── nssserver.bicep
 ├── environments/
-│   ├── dev/
-│   │   └── main.bicepparam
-│   ├── staging/
-│   │   └── main.bicepparam
-│   └── prod/
-│       └── main.bicepparam
+│   ├── dev/main.bicepparam
+│   ├── staging/main.bicepparam
+│   └── prod/main.bicepparam
 ├── scripts/
+│   └── Deploy-BicepStack.ps1
 ├── docs/
+│   ├── architecture.md
+│   └── layout.md
 └── .github/workflows/
+    ├── bicep-validate.yml
+    └── bicep-deploy.yml
 ```
 
 ## Placement rules

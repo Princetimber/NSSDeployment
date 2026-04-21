@@ -1,8 +1,8 @@
 # Module: storage
 
-Deploys a storage account with a VHD blob container used to host the NSS server disk image before VM provisioning. Access is locked down to specific VNet subnets (via service endpoints) and an explicit public IP allowlist.
+Deploys (or references) a storage account used to host the NSS server VHD blob before VM provisioning.
 
-**Depends on:** networking module (VNet and subnets must exist before service endpoint rules can reference them).
+**Depends on:** nothing — storage is standalone and has no dependency on the networking module.
 
 ---
 
@@ -11,10 +11,10 @@ Deploys a storage account with a VHD blob container used to host the NSS server 
 | Resource | Name pattern |
 |----------|-------------|
 | `Microsoft.Storage/storageAccounts` | Supplied via `storageAccountName` parameter |
-| `Microsoft.Storage/storageAccounts/blobServices` | `default` |
-| `Microsoft.Storage/storageAccounts/blobServices/containers` | `vhds` (configurable) |
 
-**Storage account settings:** Standard_LRS, StorageV2, Hot tier, HTTPS-only, immutable blob storage (30-day unlocked policy), VNet firewall with `Deny` default action.
+**Storage account settings:** Standard_LRS, StorageV2, Hot tier, HTTPS-only, TLS 1.2 minimum, public blob access disabled.
+
+> **Container:** The VHD blob must be uploaded to a container named `nss` inside the storage account before deploying the compute module. The blob path expected is `nss/znss_5_2_osdisk.vhd`.
 
 ---
 
@@ -26,12 +26,8 @@ Deploys a storage account with a VHD blob container used to host the NSS server 
 | `environmentName` | string | No | `'dev'` | Environment identifier |
 | `projectName` | string | **Yes** | — | Naming prefix (for tags) |
 | `ownerName` | string | No | `''` | Owner tag value |
-| `tags` | object | No | derived | Resource tags |
 | `storageAccountName` | string | **Yes** | — | Storage account name (3–24 lowercase alphanumeric, no hyphens) |
-| `vnetName` | string | **Yes** | — | Name of the VNet whose subnets get service endpoint access |
-| `subnets` | array | **Yes** | — | Subnet names (strings) to allow via VNet rules. Allowed values: `'subnet1'`, `'subnet2'` |
-| `publicIpAddress` | string | **Yes** | — | Public IP address allowed through the storage firewall (deployer or jump-host IP) |
-| `vhdContainerName` | string | No | `'vhds'` | Blob container name for VHD uploads |
+| `storageNewOrExisting` | string | No | `'new'` | `'new'` creates the account; `'existing'` references a pre-existing account. All three environments currently set this to `'existing'`. Allowed: `'new'`, `'existing'` |
 
 ---
 
@@ -41,8 +37,6 @@ Deploys a storage account with a VHD blob container used to host the NSS server 
 |------|------|-------------|
 | `storageAccountId` | string | Resource ID of the storage account |
 | `storageAccountName` | string | Name of the storage account |
-| `vhdContainerName` | string | Name of the VHD blob container |
-| `vhdContainerUri` | string | Full URI of the VHD container (used by compute module to build the VHD blob URI) |
 
 ---
 
@@ -55,24 +49,19 @@ module storage './modules/storage/main.bicep' = {
     location: location
     environmentName: environmentName
     projectName: projectName
-    tags: tags
     storageAccountName: 'stnssdeploymentdev'
-    vnetName: 'vnet-nssdeployment-dev'
-    subnets: ['subnet1', 'subnet2']
-    publicIpAddress: publicIpAddress
-    vhdContainerName: 'vhds'
+    storageNewOrExisting: 'existing'
   }
-  dependsOn: [networking]   // VNet must exist before service endpoint rules resolve
 }
 ```
 
-> **Before deploying compute:** upload your VHD to the container using the `vhdContainerUri` output:
+> **Before deploying compute:** upload the VHD to the `nss` container in the storage account:
 >
 > ```bash
 > az storage blob upload \
 >   --account-name stnssdeploymentdev \
->   --container-name vhds \
->   --name nssserver.vhd \
->   --file /path/to/nssserver.vhd \
+>   --container-name nss \
+>   --name znss_5_2_osdisk.vhd \
+>   --file /path/to/znss_5_2_osdisk.vhd \
 >   --auth-mode login
 > ```

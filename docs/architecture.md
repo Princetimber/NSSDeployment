@@ -37,7 +37,8 @@ main.bicep (resourceGroup scope)
 ├── module: compute  (dependsOn: networking)  →  modules/compute/main.bicep
 │   └── nssserver.bicep
 │       ├── Microsoft.Compute/disks                    disk-nssdeployment-{env}
-│       ├── Microsoft.Network/networkInterfaces        nic-nssdeployment-{env}
+│       ├── Microsoft.Network/networkInterfaces        nic1-nssdeployment-{env}  (primary, subnet1, dynamic IP)
+│       ├── Microsoft.Network/networkInterfaces        nic2-nssdeployment-{env}  (secondary, subnet2, static .5)
 │       └── Microsoft.Compute/virtualMachines          vm-nssdeployment-{env}
 │           └── identity: SystemAssigned
 │
@@ -70,7 +71,7 @@ Security and networking deploy in parallel (no dependency between them). Storage
 
 | Control | Implementation |
 |---------|---------------|
-| Secrets | SSH public key stored in Key Vault — never in param files or outputs |
+| Secrets | SSH public key injected at deploy time via `SSH_PUBLIC_KEY` GitHub Actions environment secret; stored in Key Vault — never hardcoded in param files or outputs |
 | VM access | System-assigned managed identity with least-privilege KV Secrets User role |
 | Storage access | VNet service endpoints + IP allowlist (no public blob access) |
 | CI/CD credentials | OIDC Workload Identity Federation — no long-lived secrets in GitHub |
@@ -119,6 +120,7 @@ Workflows use Workload Identity Federation — no long-lived credentials stored 
 | `AZURE_CLIENT_ID` | App registration client ID |
 | `AZURE_TENANT_ID` | Entra ID tenant ID |
 | `AZURE_SUBSCRIPTION_ID` | Azure subscription ID |
+| `SSH_PUBLIC_KEY` | Per-environment SSH public key for NSS VM access. Set in GitHub Environments (`dev`, `staging`, `prod`), not as a repo-level secret. |
 
 ### Required GitHub Environments
 
@@ -144,9 +146,43 @@ All segments **lowercase**. `<type>` is the abbreviated Azure resource type. Nev
 | Storage account | `st` | `stnssdeploymentdev` ¹ |
 | Virtual Machine | `vm` | `vm-nssdeployment-dev` |
 | Managed Disk | `disk` | `disk-nssdeployment-dev` |
-| Network Interface | `nic` | `nic-nssdeployment-dev` |
+| Network Interface (primary) | `nic1` | `nic1-nssdeployment-dev` (subnet1, dynamic IP) |
+| Network Interface (secondary) | `nic2` | `nic2-nssdeployment-dev` (subnet2, static IP `.5`) |
 
 ¹ Storage account names may not contain hyphens.
+
+---
+
+## Deployment Lifecycle
+
+### Pre-deploy (each environment)
+
+Each deploy job runs these steps before `az deployment group create`:
+
+1. Deallocate VM if running — ARM cannot update NIC count on a running VM.
+2. Delete stale `nic-nssdeployment-{env}` NIC if it exists (pre-rename cleanup).
+3. Delete any NSGs not matching `nsg-nssdeployment-{env}` (duplicate cleanup).
+4. Delete stale Key Vault Secrets User role assignments on the KV — avoids `RoleAssignmentUpdateNotPermitted` when the VM is recreated and gets a new managed identity principal ID.
+
+The KV role assignment name is deterministic: `guid(kv.id, roleId, vm-resource-id)`. Deleting stale assignments before deploy ensures a clean re-creation.
+
+### VHD source
+
+The OS disk is provisioned from a pre-uploaded VHD in each environment's storage account. The blob URI is built internally by the compute module:
+
+```
+https://<storageAccountName>.blob.<environment().suffixes.storage>/nss/znss_5_2_osdisk.vhd
+```
+
+No SAS token is required — access is granted via VNet service endpoints.
+
+### Post-prod cleanup (push-triggered only)
+
+After a successful prod deploy, dev and staging resources are deleted in dependency order to avoid leaving unused infrastructure running:
+
+VM → disk → NICs → NAT Gateway (subnets detached first) → VNet → NSGs → Public IPs → Key Vault (delete + purge)
+
+Storage accounts are intentionally preserved.
 
 ---
 

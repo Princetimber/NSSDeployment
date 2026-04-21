@@ -68,10 +68,8 @@ Edit `environments/{env}/main.bicepparam` and replace the following placeholders
 
 | Parameter | Where to find it |
 |-----------|-----------------|
-| `sshPublicKey` | Contents of `~/.ssh/id_rsa.pub` — or use `getSecret()` once Key Vault exists |
+| `sshPublicKey` | Stored as the `SSH_PUBLIC_KEY` GitHub Actions environment secret (set per env in **Settings → Environments → {env}**). Each `environments/{env}/main.bicepparam` has `param sshPublicKey = ''` as a placeholder — the workflow injects the real value at runtime via `--parameters "sshPublicKey=$SSH_PUBLIC_KEY"`. |
 | `destinationAddressPrefixes` | Zscaler hub IP ranges from your Zscaler admin portal |
-| `publicIpAddress` | Public IP of the machine or runner performing the deployment |
-| `subnetId` | Full resource ID of `subnet1` in the environment's VNet (populated after first networking deploy) |
 
 ---
 
@@ -141,6 +139,12 @@ Create an app registration in Entra ID and add federated credentials scoped to:
 Create three environments in **Settings → Environments**: `dev`, `staging`, `prod`.
 Add a **required reviewer** protection rule to `prod` to enforce manual approval before production deploys.
 
+Add the following **per-environment secret** to each of the three environments:
+
+| Secret | Value |
+|--------|-------|
+| `SSH_PUBLIC_KEY` | Contents of `~/.ssh/id_rsa.pub` for the key pair used to access the NSS VM |
+
 ---
 
 ## CI/CD Workflows
@@ -170,7 +174,8 @@ All segments lowercase. `projectName` = `nssdeployment`.
 | Storage account | `stnssdeploymentdev` |
 | VM | `vm-nssdeployment-dev` |
 | Managed disk | `disk-nssdeployment-dev` |
-| NIC | `nic-nssdeployment-dev` |
+| NIC 1 (primary) | `nic1-nssdeployment-dev` |
+| NIC 2 (secondary) | `nic2-nssdeployment-dev` |
 
 ---
 
