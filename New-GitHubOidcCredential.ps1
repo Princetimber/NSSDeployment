@@ -134,16 +134,22 @@ Write-Output ''
 
 $credentials = @(
     @{
-        name     = 'github-main'
-        subject  = "repo:$GitHubOrg/${GitHubRepo}:ref:refs/heads/main"
-        desc     = 'Push to main branch'
+        name    = 'github-main'
+        subject = "repo:$GitHubOrg/${GitHubRepo}:ref:refs/heads/main"
+        desc    = 'Push to main branch'
     }
     @{
-        name     = 'github-prs'
-        subject  = "repo:$GitHubOrg/${GitHubRepo}:pull_request"
-        desc     = 'Pull request events'
+        name    = 'github-prs'
+        subject = "repo:$GitHubOrg/${GitHubRepo}:pull_request"
+        desc    = 'Pull request events'
     }
-)
+) + ($Environments | ForEach-Object {
+    @{
+        name    = "github-env-$_"
+        subject = "repo:$GitHubOrg/${GitHubRepo}:environment:$_"
+        desc    = "GitHub environment: $_"
+    }
+})
 
 foreach ($cred in $credentials) {
     $exists = az ad app federated-credential list --id $appId `
