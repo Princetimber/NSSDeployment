@@ -118,7 +118,7 @@ var securityRules = [
       protocol: 'Tcp'
       sourceAddressPrefixes: sourceAddressPrefixes
       sourcePortRange: '*'
-      destinationAddressPrefixes: '199.168.148.101'
+      destinationAddressPrefix: '199.168.148.101'
       destinationPortRange: '12002'
       description: 'Allow outbound traffic to Zscaler Remote Support'
     }
@@ -132,7 +132,7 @@ var securityRules = [
       protocol: 'Udp'
       sourceAddressPrefixes: sourceAddressPrefixes
       sourcePortRange: '*'
-      destinationAddressPrefixes: '*'
+      destinationAddressPrefix: '*'
       destinationPortRange: '53'
       description: 'Allow outbound DNS traffic'
     }
@@ -146,7 +146,7 @@ var securityRules = [
       protocol: 'Udp'
       sourceAddressPrefixes: sourceAddressPrefixes
       sourcePortRange: '*'
-      destinationAddressPrefixes: '*'
+      destinationAddressPrefix: '*'
       destinationPortRange: '123'
       description: 'Allow outbound NTP traffic'
     }
