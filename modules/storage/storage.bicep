@@ -53,17 +53,6 @@ param tags object = {
 @description('Required: name of the virtual network allowed to access the storage account.')
 param vnetName string
 
-resource vnet 'Microsoft.Network/virtualNetworks@2025-05-01' existing = {
-  name: vnetName
-}
-
-resource subnetRefs 'Microsoft.Network/virtualNetworks/subnets@2025-05-01' existing = [
-  for subnet in subnets: {
-    parent: vnet
-    name: subnet
-  }
-]
-
 @description('Required: create new or existing storage account. It defaults to new.')
 @allowed([
   'new'
@@ -72,10 +61,6 @@ resource subnetRefs 'Microsoft.Network/virtualNetworks/subnets@2025-05-01' exist
 param storageAccountNewOrExisting string = 'new'
 
 @description('Required: names of subnets allowed to access the storage account. It is an array of strings.')
-@allowed([
-  'subnet1'
-  'subnet2'
-])
 param subnets array
 
 @description('Required: Public IP address allowed to access storage account. It defaults to the IP address of the machine running the deployment.')
@@ -101,12 +86,10 @@ resource storageAccountNew 'Microsoft.Storage/storageAccounts@2025-08-01' = if (
     networkAcls: {
       bypass: 'AzureServices'
       defaultAction: 'Deny'
-      virtualNetworkRules: [
-        for (subnet, i) in subnets: {
-          id: subnetRefs[i].id
-          action: 'Allow'
-        }
-      ]
+      virtualNetworkRules: [for subnet in subnets: {
+        id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnetName, subnet)
+        action: 'Allow'
+      }]
       ipRules: [
         {
           value: publicIpAddress
