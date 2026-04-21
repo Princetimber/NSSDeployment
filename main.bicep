@@ -95,8 +95,11 @@ module storage './modules/storage/main.bicep' = {
 
 // ── Compute ───────────────────────────────────────────────────────────────────
 
-@description('Required: resource ID of the subnet for the VM network interface.')
+@description('Required: resource ID of subnet1 for the primary VM network interface.')
 param subnetId string
+
+@description('Required: resource ID of subnet2 for the secondary VM network interface.')
+param nic2SubnetId string
 
 @description('Optional: VM size.')
 @allowed([
@@ -120,6 +123,7 @@ module compute './modules/compute/main.bicep' = {
     storageAccountName: storage.outputs.storageAccountName
     storageAccountId: storage.outputs.storageAccountId
     subnetId: subnetId
+    nic2SubnetId: nic2SubnetId
     vmSize: vmSize
   }
   dependsOn: [networking]

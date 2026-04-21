@@ -68,5 +68,6 @@ param storageNewOrExisting = 'existing'
 // storage account key, to avoid committing a SAS token to the repository.
 // storageAccountId is derived from the storage module output (not a top-level param).
 // Subnet resource ID for the VM NIC.
-param subnetId = '/subscriptions/07940160-ad0c-43f6-a228-ed5f3baaf990/resourceGroups/rg-NSSDeployment-dev/providers/Microsoft.Network/virtualNetworks/vnet-nssdeployment-dev/subnets/subnet1'
-param vmSize   = 'Standard_D2s_v3'
+param subnetId     = '/subscriptions/07940160-ad0c-43f6-a228-ed5f3baaf990/resourceGroups/rg-NSSDeployment-dev/providers/Microsoft.Network/virtualNetworks/vnet-nssdeployment-dev/subnets/subnet1'
+param nic2SubnetId = '/subscriptions/07940160-ad0c-43f6-a228-ed5f3baaf990/resourceGroups/rg-NSSDeployment-dev/providers/Microsoft.Network/virtualNetworks/vnet-nssdeployment-dev/subnets/subnet2'
+param vmSize       = 'Standard_D2s_v3'

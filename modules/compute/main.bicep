@@ -28,8 +28,11 @@ param storageAccountName string
 @description('Required: resource ID of the source storage account holding the VHD.')
 param storageAccountId string
 
-@description('Required: resource ID of the subnet for the VM network interface.')
+@description('Required: resource ID of subnet1 for the primary VM network interface.')
 param subnetId string
+
+@description('Required: resource ID of subnet2 for the secondary VM network interface.')
+param nic2SubnetId string
 
 @description('Optional: VM size.')
 @allowed([
@@ -49,7 +52,8 @@ param osType string = 'Linux'
 
 var vmName   = 'vm-${toLower(projectName)}-${toLower(environmentName)}'
 var diskName = 'disk-${toLower(projectName)}-${toLower(environmentName)}'
-var nicName  = 'nic-${toLower(projectName)}-${toLower(environmentName)}'
+var nicName  = 'nic1-${toLower(projectName)}-${toLower(environmentName)}'
+var nic2Name = 'nic2-${toLower(projectName)}-${toLower(environmentName)}'
 
 module nssServer './nssserver.bicep' = {
   name: '${projectName}-nssserver'
@@ -61,11 +65,13 @@ module nssServer './nssserver.bicep' = {
     vmName: vmName
     diskName: diskName
     nicName: nicName
+    nic2Name: nic2Name
     vmSize: vmSize
     osType: osType
     storageAccountName: storageAccountName
     storageAccountId: storageAccountId
     subnetId: subnetId
+    nic2SubnetId: nic2SubnetId
   }
 }
 

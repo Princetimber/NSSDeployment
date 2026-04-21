@@ -1,6 +1,6 @@
 /*
   Bicep module for deploying the NSS (Network Security Server) virtual machine in Azure.
-  Creates a managed disk imported from a VHD blob, a network interface, and the VM itself.
+  Creates a managed disk imported from a VHD blob, two network interfaces, and the VM itself.
 */
 
 @description('Required: location for all resources.')
@@ -24,8 +24,11 @@ param vmSize string = 'Standard_D2s_v3'
 @description('Required: managed disk name.')
 param diskName string
 
-@description('Required: network interface name.')
+@description('Required: primary network interface name (subnet1 — management).')
 param nicName string
+
+@description('Required: secondary network interface name (subnet2 — NSS traffic).')
+param nic2Name string
 
 @description('Required: name of the storage account holding the VHD blob.')
 param storageAccountName string
@@ -37,8 +40,11 @@ param storageAccountId string
 // authorization context for the Disk Import service within the same subscription.
 var vhdBlobUri = 'https://${storageAccountName}.blob.${environment().suffixes.storage}/nss/znss_5_2_osdisk.vhd'
 
-@description('Required: resource ID of the subnet for the network interface.')
+@description('Required: resource ID of subnet1 for the primary network interface.')
 param subnetId string
+
+@description('Required: resource ID of subnet2 for the secondary network interface.')
+param nic2SubnetId string
 
 @description('Optional: OS type of the VHD image.')
 @allowed(['Linux'])
@@ -99,6 +105,25 @@ resource nic 'Microsoft.Network/networkInterfaces@2025-05-01' = {
   }
 }
 
+resource nic2 'Microsoft.Network/networkInterfaces@2025-05-01' = {
+  name: nic2Name
+  location: location
+  tags: tags
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'ipconfig1'
+        properties: {
+          privateIPAllocationMethod: 'Dynamic'
+          subnet: {
+            id: nic2SubnetId
+          }
+        }
+      }
+    ]
+  }
+}
+
 resource vm 'Microsoft.Compute/virtualMachines@2025-04-01' = {
   name: vmName
   location: location
@@ -127,6 +152,12 @@ resource vm 'Microsoft.Compute/virtualMachines@2025-04-01' = {
           id: nic.id
           properties: {
             primary: true
+          }
+        }
+        {
+          id: nic2.id
+          properties: {
+            primary: false
           }
         }
       ]
