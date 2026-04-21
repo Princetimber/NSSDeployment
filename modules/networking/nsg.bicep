@@ -26,7 +26,7 @@ param tags object = {
 
 var securityRules = [
   {
-    name: 'Allow_HTTPS_Inbound'
+    name: 'Allow-SSH-Mgmt'
     properties: {
       priority: 100
       direction: 'Inbound'
@@ -34,43 +34,15 @@ var securityRules = [
       protocol: 'Tcp'
       sourceAddressPrefix: '*'
       sourcePortRange: '*'
-      destinationAddressPrefix: '*'
-      destinationPortRange: '443'
-      description: 'Allow inbound HTTPS traffic'
-    }
-  }
-  {
-    name: 'Allow_HTTP_Inbound'
-    properties: {
-      priority: 110
-      direction: 'Inbound'
-      access: 'Allow'
-      protocol: 'Tcp'
-      sourceAddressPrefix: '*'
-      sourcePortRange: '*'
-      destinationAddressPrefix: '*'
-      destinationPortRange: '80'
-      description: 'Allow inbound HTTP traffic'
-    }
-  }
-  {
-    name: 'Allow_SSH_Inbound'
-    properties: {
-      priority: 120
-      direction: 'Inbound'
-      access: 'Allow'
-      protocol: 'Tcp'
-      sourceAddressPrefix: '*'
-      sourcePortRange: '*'
-      destinationAddressPrefix: '*'
+      destinationAddressPrefix: '10.2.1.0/24'
       destinationPortRange: '22'
       description: 'Allow inbound SSH traffic'
     }
   }
   {
-    name: 'Allow_NSS_Zscaler_Hub_Outbound'
+    name: 'Allow-HTTPS-ZscalerHub'
     properties: {
-      priority: 130
+      priority: 120
       direction: 'Outbound'
       access: 'Allow'
       protocol: 'Tcp'
@@ -82,51 +54,23 @@ var securityRules = [
     }
   }
   {
-    name:'Allow_Zscaler_CertificateAuthority_Outbound'
+    name:'Allow-Zscaler-RemoteSupport'
     properties: {
-      priority: 140
+      priority: 130
       direction: 'Outbound'
       access: 'Allow'
       protocol: 'Tcp'
       sourceAddressPrefixes: sourceAddressPrefixes
       sourcePortRange: '*'
-      destinationAddressPrefixes: destinationAddressPrefixes
+      destinationAddressPrefix:'199.168.148.101'
       destinationPortRange: '443'
-      description: 'Allow outbound traffic to Zscaler Certificate Authority'
-    }
-  }
-  {
-    name:'Allow_Zscaler_Software_Updates_Outbound'
-    properties: {
-      priority: 150
-      direction: 'Outbound'
-      access: 'Allow'
-      protocol: 'Tcp'
-      sourceAddressPrefixes: sourceAddressPrefixes
-      sourcePortRange: '*'
-      destinationAddressPrefixes: destinationAddressPrefixes
-      destinationPortRange: '443'
-      description: 'Allow outbound traffic to Zscaler Software Updates'
-    }
-  }
-  {
-    name:'Allow_Zscaler_Remote_Support_Outbound'
-    properties: {
-      priority: 160
-      direction: 'Outbound'
-      access: 'Allow'
-      protocol: 'Tcp'
-      sourceAddressPrefixes: sourceAddressPrefixes
-      sourcePortRange: '*'
-      destinationAddressPrefix: '199.168.148.101'
-      destinationPortRange: '12002'
       description: 'Allow outbound traffic to Zscaler Remote Support'
     }
   }
   {
-    name:'Allow_DNS_Outbound'
+    name:'Allow-DNS'
     properties: {
-      priority: 170
+      priority: 140
       direction: 'Outbound'
       access: 'Allow'
       protocol: 'Udp'
@@ -138,9 +82,9 @@ var securityRules = [
     }
   }
   {
-    name:'Allow_NTP_Outbound'
+    name:'Allow-NTP'
     properties: {
-      priority: 180
+      priority: 150
       direction: 'Outbound'
       access: 'Allow'
       protocol: 'Udp'
