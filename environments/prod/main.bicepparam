@@ -52,6 +52,9 @@ param networkingSubnets = [
 // Bastion subnet CIDR — must match the AzureBastionSubnet entry above.
 param bastionSubnetAddressPrefix = '10.2.3.0/26'
 
+// Bastion already exists in this VNet — skip creation to avoid MultipleBastionHostNotAllowedInVnet.
+param deployBastion = false
+
 // DNS servers for the VNet.
 param dnsServers = [
   '168.63.129.16'

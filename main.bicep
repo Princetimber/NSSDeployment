@@ -60,6 +60,9 @@ param natGatewaySubnets array
 @description('Required: CIDR of the AzureBastionSubnet (/26 or larger, must not overlap other subnets).')
 param bastionSubnetAddressPrefix string
 
+@description('Whether to deploy Azure Bastion. Set to false when Bastion already exists in the VNet.')
+param deployBastion bool = true
+
 module networking './modules/networking/main.bicep' = {
   name: 'networkingDeploy'
   params: {
@@ -74,6 +77,7 @@ module networking './modules/networking/main.bicep' = {
     dnsServers: dnsServers
     natGatewaySubnets: natGatewaySubnets
     bastionSubnetAddressPrefix: bastionSubnetAddressPrefix
+    deployBastion: deployBastion
   }
 }
 

@@ -43,6 +43,9 @@ param natGatewaySubnets array
 @description('Required: CIDR of the AzureBastionSubnet — used to scope the Bastion SSH inbound rule.')
 param bastionSubnetAddressPrefix string
 
+@description('Whether to deploy Azure Bastion. Set to false when Bastion already exists in the VNet.')
+param deployBastion bool = true
+
 // Explicit name keeps nsg.bicep and vnet.bicep (which looks up the NSG as `existing`)
 // in sync — both must use the same formula: nsg-<projectName>-<environmentName>.
 var nsgName = 'nsg-${toLower(projectName)}-${toLower(environmentName)}'
@@ -93,7 +96,7 @@ module natgw 'natgw.bicep' = {
   dependsOn: [vnet]
 }
 
-module bastion 'bastion.bicep' = {
+module bastion 'bastion.bicep' = if (deployBastion) {
   name: '${projectName}-bastion'
   params: {
     location: location
@@ -112,5 +115,5 @@ output natGatewayId string = natgw.outputs.natGatewayId
 output natGatewayName string = natgw.outputs.natGatewayName
 output publicIpId string = natgw.outputs.publicIpId
 output publicIpName string = natgw.outputs.publicIpName
-output bastionId string = bastion.outputs.bastionId
-output bastionName string = bastion.outputs.bastionName
+output bastionId string = deployBastion ? bastion!.outputs.bastionId : ''
+output bastionName string = deployBastion ? bastion!.outputs.bastionName : ''
