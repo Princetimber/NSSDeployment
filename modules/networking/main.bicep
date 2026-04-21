@@ -40,9 +40,14 @@ param dnsServers array
 @description('Required: subnets to associate with the NAT Gateway after the VNet is provisioned.')
 param natGatewaySubnets array
 
+// Explicit name keeps nsg.bicep and vnet.bicep (which looks up the NSG as `existing`)
+// in sync — both must use the same formula: nsg-<projectName>-<environmentName>.
+var nsgName = 'nsg-${toLower(projectName)}-${toLower(environmentName)}'
+
 module nsg 'nsg.bicep' = {
   name: '${projectName}-nsg'
   params: {
+    name: nsgName
     location: location
     tags: tags
     destinationAddressPrefixes: destinationAddressPrefixes
