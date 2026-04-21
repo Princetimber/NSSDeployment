@@ -68,6 +68,10 @@ resource vnetNew 'Microsoft.Network/virtualNetworks@2025-05-01' = if(vnetNewOrEx
         networkSecurityGroup: {
           id: nsgId
         }
+        // Required for storage account VNet firewall rules to accept this subnet
+        serviceEndpoints: [
+          { service: 'Microsoft.Storage' }
+        ]
       }
     }]
     enableDdosProtection: false
