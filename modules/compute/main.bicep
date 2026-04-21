@@ -34,6 +34,9 @@ param subnetId string
 @description('Required: resource ID of subnet2 for the secondary VM network interface.')
 param nic2SubnetId string
 
+@description('Required: static private IP address for the secondary network interface.')
+param nic2PrivateIpAddress string
+
 @description('Optional: VM size.')
 @allowed([
   'Standard_DS1_v2'
@@ -72,6 +75,7 @@ module nssServer './nssserver.bicep' = {
     storageAccountId: storageAccountId
     subnetId: subnetId
     nic2SubnetId: nic2SubnetId
+    nic2PrivateIpAddress: nic2PrivateIpAddress
   }
 }
 

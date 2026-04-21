@@ -46,6 +46,9 @@ param subnetId string
 @description('Required: resource ID of subnet2 for the secondary network interface.')
 param nic2SubnetId string
 
+@description('Required: static private IP address for the secondary network interface.')
+param nic2PrivateIpAddress string
+
 @description('Optional: OS type of the VHD image.')
 @allowed(['Linux'])
 param osType string = 'Linux'
@@ -114,7 +117,8 @@ resource nic2 'Microsoft.Network/networkInterfaces@2025-05-01' = {
       {
         name: 'ipconfig1'
         properties: {
-          privateIPAllocationMethod: 'Dynamic'
+          privateIPAllocationMethod: 'Static'
+          privateIPAddress: nic2PrivateIpAddress
           subnet: {
             id: nic2SubnetId
           }
