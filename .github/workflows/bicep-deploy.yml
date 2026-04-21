@@ -97,6 +97,11 @@ jobs:
         run: |
           set -euo pipefail
 
+          if [ -z "${SSH_PUBLIC_KEY:-}" ]; then
+            echo "::error::SSH_PUBLIC_KEY secret is missing or empty — set it in the 'dev' GitHub Actions environment."
+            exit 1
+          fi
+
           DEPLOYMENT_NAME="deploy-dev-${{ github.run_number }}"
           RG="rg-NSSDeployment-dev"
 
@@ -212,6 +217,11 @@ jobs:
         run: |
           set -euo pipefail
 
+          if [ -z "${SSH_PUBLIC_KEY:-}" ]; then
+            echo "::error::SSH_PUBLIC_KEY secret is missing or empty — set it in the 'staging' GitHub Actions environment."
+            exit 1
+          fi
+
           DEPLOYMENT_NAME="deploy-staging-${{ github.run_number }}"
           RG="rg-NSSDeployment-staging"
 
@@ -326,6 +336,11 @@ jobs:
           SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
         run: |
           set -euo pipefail
+
+          if [ -z "${SSH_PUBLIC_KEY:-}" ]; then
+            echo "::error::SSH_PUBLIC_KEY secret is missing or empty — set it in the 'prod' GitHub Actions environment."
+            exit 1
+          fi
 
           DEPLOYMENT_NAME="deploy-prod-${{ github.run_number }}"
           RG="rg-NSSDeployment-prod"

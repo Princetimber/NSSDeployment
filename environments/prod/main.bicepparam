@@ -7,8 +7,8 @@ param projectName     = 'nssdeployment'
 // ── Security ───────────────────────────────────────────────────────────────────
 // Key Vault: kv-nssdeployment-prod
 param sshPublicKeySecretName = 'ssh-public-key'
-// sshPublicKey is injected at deploy time by the workflow from the SSH_PUBLIC_KEY
-// GitHub Actions environment secret — never hardcode here.
+// Injected at deploy time by GitHub Actions (SSH_PUBLIC_KEY env secret) — do not hardcode real keys here.
+param sshPublicKey = ''
 
 // ── Networking ─────────────────────────────────────────────────────────────────
 // NSG: nsg-nssdeployment-prod | VNet: vnet-nssdeployment-prod | NAT GW: natgw-nssdeployment-prod
