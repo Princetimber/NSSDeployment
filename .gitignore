@@ -88,6 +88,10 @@ $RECYCLE.BIN/
 *.local.bicepparam
 *.override.bicepparam
 
+# Local secrets backup (never commit)
+.secrets.local
+*.secrets.local
+
 # Azure CLI session data
 .azure/
 

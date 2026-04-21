@@ -35,15 +35,21 @@ jobs:
         run: az bicep build --file main.bicep
 
       - name: Validate (${{ matrix.environment }})
+        env:
+          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
         run: |
           az deployment group validate \
             --resource-group rg-NSSDeployment-${{ matrix.environment }} \
             --template-file main.bicep \
-            --parameters environments/${{ matrix.environment }}/main.bicepparam
+            --parameters environments/${{ matrix.environment }}/main.bicepparam \
+            --parameters "sshPublicKey=$SSH_PUBLIC_KEY"
 
       - name: What-if (${{ matrix.environment }})
+        env:
+          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
         run: |
           az deployment group what-if \
             --resource-group rg-NSSDeployment-${{ matrix.environment }} \
             --template-file main.bicep \
-            --parameters environments/${{ matrix.environment }}/main.bicepparam
+            --parameters environments/${{ matrix.environment }}/main.bicepparam \
+            --parameters "sshPublicKey=$SSH_PUBLIC_KEY"

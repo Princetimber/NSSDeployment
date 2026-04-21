@@ -7,10 +7,8 @@ param projectName     = 'nssdeployment'
 // ── Security ───────────────────────────────────────────────────────────────────
 // Key Vault: kv-nssdeployment-prod
 param sshPublicKeySecretName = 'ssh-public-key'
-// Replace with your public key (e.g. contents of ~/.ssh/id_rsa.pub).
-// For CI/CD use getSecret() once the Key Vault exists and the secret is populated:
-//   param sshPublicKey = getSecret('07940160-ad0c-43f6-a228-ed5f3baaf990', 'rg-NSSDeployment-prod', 'kv-nssdeployment-prod', 'ssh-public-key')
-param sshPublicKey = ''
+// sshPublicKey is injected at deploy time by the workflow from the SSH_PUBLIC_KEY
+// GitHub Actions environment secret — never hardcode here.
 
 // ── Networking ─────────────────────────────────────────────────────────────────
 // NSG: nsg-nssdeployment-prod | VNet: vnet-nssdeployment-prod | NAT GW: natgw-nssdeployment-prod

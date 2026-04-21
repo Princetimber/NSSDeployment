@@ -92,6 +92,8 @@ jobs:
           fi
       - name: Deploy
         shell: bash
+        env:
+          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
         run: |
           set -euo pipefail
 
@@ -131,7 +133,8 @@ jobs:
             --name "$DEPLOYMENT_NAME" \
             --resource-group "$RG" \
             --template-file main.bicep \
-            --parameters environments/dev/main.bicepparam; then
+            --parameters environments/dev/main.bicepparam \
+            --parameters "sshPublicKey=$SSH_PUBLIC_KEY"; then
 
             echo "::error::Deployment failed — dumping operation details for $DEPLOYMENT_NAME"
             dump_failures "$RG" "$DEPLOYMENT_NAME"
@@ -204,6 +207,8 @@ jobs:
           fi
       - name: Deploy
         shell: bash
+        env:
+          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
         run: |
           set -euo pipefail
 
@@ -243,7 +248,8 @@ jobs:
             --name "$DEPLOYMENT_NAME" \
             --resource-group "$RG" \
             --template-file main.bicep \
-            --parameters environments/staging/main.bicepparam; then
+            --parameters environments/staging/main.bicepparam \
+            --parameters "sshPublicKey=$SSH_PUBLIC_KEY"; then
 
             echo "::error::Deployment failed — dumping operation details for $DEPLOYMENT_NAME"
             dump_failures "$RG" "$DEPLOYMENT_NAME"
@@ -316,6 +322,8 @@ jobs:
           fi
       - name: Deploy
         shell: bash
+        env:
+          SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
         run: |
           set -euo pipefail
 
@@ -355,7 +363,8 @@ jobs:
             --name "$DEPLOYMENT_NAME" \
             --resource-group "$RG" \
             --template-file main.bicep \
-            --parameters environments/prod/main.bicepparam; then
+            --parameters environments/prod/main.bicepparam \
+            --parameters "sshPublicKey=$SSH_PUBLIC_KEY"; then
 
             echo "::error::Deployment failed — dumping operation details for $DEPLOYMENT_NAME"
             dump_failures "$RG" "$DEPLOYMENT_NAME"
