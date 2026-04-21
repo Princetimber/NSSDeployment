@@ -42,18 +42,31 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Bicep lint
         run: az bicep build --file main.bicep
-      - name: Pre-deploy — deallocate VM if it exists
+      - name: Pre-deploy — deallocate VM and remove stale resources
         shell: bash
         run: |
           RG="rg-NSSDeployment-dev"
           VM="vm-nssdeployment-dev"
-          STATE=$(az vm show --resource-group "$RG" --name "$VM" --query "powerState" -d -o tsv 2>/dev/null || echo "NotFound")
+
+          # Deallocate VM so ARM can update NIC attachments
+          STATE=$(az vm show --resource-group "$RG" --name "$VM" \
+            --query "powerState" -d -o tsv 2>/dev/null || echo "NotFound")
           if [ "$STATE" = "NotFound" ]; then
             echo "VM $VM not found — skipping deallocation."
           else
-            echo "VM $VM found (state: $STATE) — deallocating before NIC update..."
+            echo "VM $VM found (state: $STATE) — deallocating..."
             az vm deallocate --resource-group "$RG" --name "$VM"
             echo "VM $VM deallocated."
+          fi
+
+          # Delete stale NIC from before the nic1/nic2 rename
+          STALE_NIC="nic-nssdeployment-dev"
+          if az network nic show --resource-group "$RG" --name "$STALE_NIC" &>/dev/null; then
+            echo "Deleting stale NIC $STALE_NIC..."
+            az network nic delete --resource-group "$RG" --name "$STALE_NIC"
+            echo "Deleted $STALE_NIC."
+          else
+            echo "Stale NIC $STALE_NIC not found — nothing to clean up."
           fi
       - name: Deploy
         shell: bash
@@ -123,18 +136,29 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Bicep lint
         run: az bicep build --file main.bicep
-      - name: Pre-deploy — deallocate VM if it exists
+      - name: Pre-deploy — deallocate VM and remove stale resources
         shell: bash
         run: |
           RG="rg-NSSDeployment-staging"
           VM="vm-nssdeployment-staging"
-          STATE=$(az vm show --resource-group "$RG" --name "$VM" --query "powerState" -d -o tsv 2>/dev/null || echo "NotFound")
+
+          STATE=$(az vm show --resource-group "$RG" --name "$VM" \
+            --query "powerState" -d -o tsv 2>/dev/null || echo "NotFound")
           if [ "$STATE" = "NotFound" ]; then
             echo "VM $VM not found — skipping deallocation."
           else
-            echo "VM $VM found (state: $STATE) — deallocating before NIC update..."
+            echo "VM $VM found (state: $STATE) — deallocating..."
             az vm deallocate --resource-group "$RG" --name "$VM"
             echo "VM $VM deallocated."
+          fi
+
+          STALE_NIC="nic-nssdeployment-staging"
+          if az network nic show --resource-group "$RG" --name "$STALE_NIC" &>/dev/null; then
+            echo "Deleting stale NIC $STALE_NIC..."
+            az network nic delete --resource-group "$RG" --name "$STALE_NIC"
+            echo "Deleted $STALE_NIC."
+          else
+            echo "Stale NIC $STALE_NIC not found — nothing to clean up."
           fi
       - name: Deploy
         shell: bash
@@ -204,18 +228,29 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Bicep lint
         run: az bicep build --file main.bicep
-      - name: Pre-deploy — deallocate VM if it exists
+      - name: Pre-deploy — deallocate VM and remove stale resources
         shell: bash
         run: |
           RG="rg-NSSDeployment-prod"
           VM="vm-nssdeployment-prod"
-          STATE=$(az vm show --resource-group "$RG" --name "$VM" --query "powerState" -d -o tsv 2>/dev/null || echo "NotFound")
+
+          STATE=$(az vm show --resource-group "$RG" --name "$VM" \
+            --query "powerState" -d -o tsv 2>/dev/null || echo "NotFound")
           if [ "$STATE" = "NotFound" ]; then
             echo "VM $VM not found — skipping deallocation."
           else
-            echo "VM $VM found (state: $STATE) — deallocating before NIC update..."
+            echo "VM $VM found (state: $STATE) — deallocating..."
             az vm deallocate --resource-group "$RG" --name "$VM"
             echo "VM $VM deallocated."
+          fi
+
+          STALE_NIC="nic-nssdeployment-prod"
+          if az network nic show --resource-group "$RG" --name "$STALE_NIC" &>/dev/null; then
+            echo "Deleting stale NIC $STALE_NIC..."
+            az network nic delete --resource-group "$RG" --name "$STALE_NIC"
+            echo "Deleted $STALE_NIC."
+          else
+            echo "Stale NIC $STALE_NIC not found — nothing to clean up."
           fi
       - name: Deploy
         shell: bash
