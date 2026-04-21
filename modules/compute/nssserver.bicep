@@ -27,12 +27,15 @@ param diskName string
 @description('Required: network interface name.')
 param nicName string
 
-@description('Required: full SAS URI of the VHD blob to import (e.g. https://<account>.blob.core.windows.net/<container>/<file>.vhd?<sas-token>).')
-@secure()
-param vhdSasUri string
+@description('Required: name of the storage account holding the VHD blob.')
+param storageAccountName string
 
 @description('Required: resource ID of the source storage account holding the VHD.')
 param storageAccountId string
+
+// Blob URI for the VHD — no SAS needed; the storage account ID provides the
+// authorization context for the Disk Import service within the same subscription.
+var vhdBlobUri = 'https://${storageAccountName}.blob.${environment().suffixes.storage}/nss/znss_5_2_osdisk.vhd'
 
 @description('Required: resource ID of the subnet for the network interface.')
 param subnetId string
@@ -68,7 +71,7 @@ resource managedDisk 'Microsoft.Compute/disks@2025-01-02' = {
   properties: {
     creationData: {
       createOption: 'Import'
-      sourceUri: vhdSasUri
+      sourceUri: vhdBlobUri
       storageAccountId: storageAccountId
     }
     osType: osType

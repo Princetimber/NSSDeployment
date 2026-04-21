@@ -49,25 +49,6 @@ jobs:
 
           DEPLOYMENT_NAME="deploy-dev-${{ github.run_number }}"
           RG="rg-NSSDeployment-dev"
-          STORAGE_ACCOUNT="stnssdeploymentdev"
-
-          # Generate a short-lived SAS URI for the VHD blob in the environment's
-          # storage account. The SAS is masked so it never appears in the log.
-          STORAGE_KEY=$(az storage account keys list \
-            --account-name "$STORAGE_ACCOUNT" \
-            --resource-group "$RG" \
-            --query "[0].value" -o tsv)
-          VHD_SAS_URI=$(az storage blob generate-sas \
-            --account-name "$STORAGE_ACCOUNT" \
-            --account-key "$STORAGE_KEY" \
-            --container-name nss \
-            --name znss_5_2_osdisk.vhd \
-            --permissions r \
-            --expiry "$(date -u -d '+2 hours' '+%Y-%m-%dT%H:%MZ')" \
-            --https-only \
-            --full-uri \
-            -o tsv)
-          echo "::add-mask::$VHD_SAS_URI"
 
           dump_failures() {
             local rg="$1" name="$2"
@@ -107,7 +88,6 @@ jobs:
             --resource-group "$RG" \
             --template-file main.bicep \
             --parameters environments/dev/main.bicepparam \
-            --parameters "vhdSasUri=$VHD_SAS_URI" \
             --only-show-errors; then
 
             echo "::error::Deployment failed — dumping operation details for $DEPLOYMENT_NAME"
@@ -142,23 +122,6 @@ jobs:
 
           DEPLOYMENT_NAME="deploy-staging-${{ github.run_number }}"
           RG="rg-NSSDeployment-staging"
-          STORAGE_ACCOUNT="stnssdeploymentstg"
-
-          STORAGE_KEY=$(az storage account keys list \
-            --account-name "$STORAGE_ACCOUNT" \
-            --resource-group "$RG" \
-            --query "[0].value" -o tsv)
-          VHD_SAS_URI=$(az storage blob generate-sas \
-            --account-name "$STORAGE_ACCOUNT" \
-            --account-key "$STORAGE_KEY" \
-            --container-name nss \
-            --name znss_5_2_osdisk.vhd \
-            --permissions r \
-            --expiry "$(date -u -d '+2 hours' '+%Y-%m-%dT%H:%MZ')" \
-            --https-only \
-            --full-uri \
-            -o tsv)
-          echo "::add-mask::$VHD_SAS_URI"
 
           dump_failures() {
             local rg="$1" name="$2"
@@ -198,7 +161,6 @@ jobs:
             --resource-group "$RG" \
             --template-file main.bicep \
             --parameters environments/staging/main.bicepparam \
-            --parameters "vhdSasUri=$VHD_SAS_URI" \
             --only-show-errors; then
 
             echo "::error::Deployment failed — dumping operation details for $DEPLOYMENT_NAME"
@@ -233,23 +195,6 @@ jobs:
 
           DEPLOYMENT_NAME="deploy-prod-${{ github.run_number }}"
           RG="rg-NSSDeployment-prod"
-          STORAGE_ACCOUNT="stnssdeploymentprod"
-
-          STORAGE_KEY=$(az storage account keys list \
-            --account-name "$STORAGE_ACCOUNT" \
-            --resource-group "$RG" \
-            --query "[0].value" -o tsv)
-          VHD_SAS_URI=$(az storage blob generate-sas \
-            --account-name "$STORAGE_ACCOUNT" \
-            --account-key "$STORAGE_KEY" \
-            --container-name nss \
-            --name znss_5_2_osdisk.vhd \
-            --permissions r \
-            --expiry "$(date -u -d '+2 hours' '+%Y-%m-%dT%H:%MZ')" \
-            --https-only \
-            --full-uri \
-            -o tsv)
-          echo "::add-mask::$VHD_SAS_URI"
 
           dump_failures() {
             local rg="$1" name="$2"
@@ -289,7 +234,6 @@ jobs:
             --resource-group "$RG" \
             --template-file main.bicep \
             --parameters environments/prod/main.bicepparam \
-            --parameters "vhdSasUri=$VHD_SAS_URI" \
             --only-show-errors; then
 
             echo "::error::Deployment failed — dumping operation details for $DEPLOYMENT_NAME"

@@ -95,10 +95,6 @@ module storage './modules/storage/main.bicep' = {
 
 // ── Compute ───────────────────────────────────────────────────────────────────
 
-@description('Required: full SAS URI of the VHD blob to import (blob URL + SAS token). Injected at deploy time — do not set in .bicepparam files.')
-@secure()
-param vhdSasUri string
-
 @description('Required: resource ID of the subnet for the VM network interface.')
 param subnetId string
 
@@ -121,7 +117,7 @@ module compute './modules/compute/main.bicep' = {
     environmentName: environmentName
     projectName: projectName
     tags: tags
-    vhdSasUri: vhdSasUri
+    storageAccountName: storage.outputs.storageAccountName
     storageAccountId: storage.outputs.storageAccountId
     subnetId: subnetId
     vmSize: vmSize
