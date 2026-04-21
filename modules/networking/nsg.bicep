@@ -16,6 +16,9 @@ param environmentName string = 'Dev'
 @description('Optional: owner name for the Owner resource tag.')
 param ownerName string
 
+@description('Required: CIDR of the AzureBastionSubnet — used to scope the Bastion SSH inbound rule.')
+param bastionSubnetAddressPrefix string
+
 @description('Optional:tags of the network security group to create.')
 param tags object = {
   displayName: 'Network Security Group'
@@ -26,9 +29,23 @@ param tags object = {
 
 var securityRules = [
   {
-    name: 'Allow-SSH-Mgmt'
+    name: 'Allow-Azure-SSH-Bastion'
     properties: {
       priority: 100
+      direction: 'Inbound'
+      access: 'Allow'
+      protocol: 'Tcp'
+      sourceAddressPrefix: bastionSubnetAddressPrefix
+      sourcePortRange: '*'
+      destinationAddressPrefix: '*'
+      destinationPortRange: '22'
+      description: 'Allow inbound SSH from Azure Bastion subnet'
+    }
+  }
+  {
+    name: 'Allow-SSH-Mgmt'
+    properties: {
+      priority: 110
       direction: 'Inbound'
       access: 'Allow'
       protocol: 'Tcp'

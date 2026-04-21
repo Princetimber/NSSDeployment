@@ -65,11 +65,10 @@ resource vnetNew 'Microsoft.Network/virtualNetworks@2025-05-01' = if(vnetNewOrEx
       name: subnet.name
       properties: {
         addressPrefix: subnet.addressPrefix
-        networkSecurityGroup: {
-          id: nsgId
-        }
+        // AzureBastionSubnet must NOT have an NSG or service endpoints attached
+        networkSecurityGroup: subnet.name == 'AzureBastionSubnet' ? null : { id: nsgId }
         // Required for storage account VNet firewall rules to accept this subnet
-        serviceEndpoints: [
+        serviceEndpoints: subnet.name == 'AzureBastionSubnet' ? [] : [
           { service: 'Microsoft.Storage' }
         ]
       }
