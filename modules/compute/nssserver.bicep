@@ -27,10 +27,13 @@ param diskName string
 @description('Required: network interface name.')
 param nicName string
 
+// Retained for when createOption is switched back to 'Import' after VHD upload.
 @description('Required: full URI of the VHD blob to import (e.g. https://<account>.blob.core.windows.net/<container>/<file>.vhd).')
+#disable-next-line no-unused-params
 param vhdBlobUri string
 
 @description('Required: resource ID of the storage account that holds the VHD.')
+#disable-next-line no-unused-params
 param storageAccountId string
 
 @description('Required: resource ID of the subnet for the network interface.')
@@ -66,9 +69,11 @@ resource managedDisk 'Microsoft.Compute/disks@2025-01-02' = {
   }
   properties: {
     creationData: {
-      createOption: 'Import'
-      sourceUri: vhdBlobUri
-      storageAccountId: storageAccountId
+      // TODO: switch back to 'Import' once nssserver.vhd is uploaded to the vhds container.
+      // createOption: 'Import'
+      // sourceUri: vhdBlobUri
+      // storageAccountId: storageAccountId
+      createOption: 'Empty'
     }
     osType: osType
     diskSizeGB: 512
