@@ -67,8 +67,8 @@ param storageNewOrExisting = 'existing'
 // vhdSasUri is NOT set here — generated at deploy time by the workflow using the
 // storage account key, to avoid committing a SAS token to the repository.
 // storageAccountId is derived from the storage module output (not a top-level param).
-param subnetId     = '/subscriptions/07940160-ad0c-43f6-a228-ed5f3baaf990/resourceGroups/rg-NSSDeployment-staging/providers/Microsoft.Network/virtualNetworks/vnet-nssdeployment-staging/subnets/subnet1'
-param nic2SubnetId         = '/subscriptions/07940160-ad0c-43f6-a228-ed5f3baaf990/resourceGroups/rg-NSSDeployment-staging/providers/Microsoft.Network/virtualNetworks/vnet-nssdeployment-staging/subnets/subnet2'
+// subnetId / nic2SubnetId are resolved internally via existing resource references
+// (vnet-nssdeployment-staging / subnet1 + subnet2) — not needed as top-level params.
 param nic2PrivateIpAddress = '10.1.2.5'
 param vmSize       = 'Standard_D2s_v3'
 

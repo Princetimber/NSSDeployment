@@ -1,6 +1,7 @@
 /*
   Bicep module for deploying the NSS (Network Security Server) virtual machine in Azure.
   Creates a managed disk imported from a VHD blob, two network interfaces, and the VM itself.
+  Networking resources (VNet, subnets, NSG) are referenced as existing — not created here.
 */
 
 @description('Required: location for all resources.')
@@ -36,18 +37,14 @@ param storageAccountName string
 @description('Required: resource ID of the source storage account holding the VHD.')
 param storageAccountId string
 
-// Blob URI for the VHD — no SAS needed; the storage account ID provides the
-// authorization context for the Disk Import service within the same subscription.
-var vhdBlobUri = 'https://${storageAccountName}.blob.${environment().suffixes.storage}/nss/znss_5_2_osdisk.vhd'
-
-@description('Required: resource ID of subnet1 for the primary network interface.')
-param subnetId string
-
-@description('Required: resource ID of subnet2 for the secondary network interface.')
-param nic2SubnetId string
-
 @description('Required: static private IP address for the secondary network interface.')
 param nic2PrivateIpAddress string
+
+@description('Required: name of the virtual network to attach the NICs to.')
+param vnetName string
+
+@description('Required: name of the network security group to associate with both NICs.')
+param nsgName string
 
 @description('Optional: OS type of the VHD image.')
 @allowed(['Linux'])
@@ -69,6 +66,31 @@ param tags object = {
   Owner: ownerName
 }
 
+// Blob URI for the VHD — no SAS needed; the storage account ID provides the
+// authorization context for the Disk Import service within the same subscription.
+var vhdBlobUri = 'https://${storageAccountName}.blob.${environment().suffixes.storage}/nss/znss_5_2_osdisk.vhd'
+
+// ── Existing networking resources ─────────────────────────────────────────────
+
+resource vnet 'Microsoft.Network/virtualNetworks@2025-05-01' existing = {
+  name: vnetName
+}
+
+resource subnet1 'Microsoft.Network/virtualNetworks/subnets@2025-05-01' existing = {
+  parent: vnet
+  name: 'subnet1'
+}
+
+resource subnet2 'Microsoft.Network/virtualNetworks/subnets@2025-05-01' existing = {
+  parent: vnet
+  name: 'subnet2'
+}
+
+resource nsg 'Microsoft.Network/networkSecurityGroups@2025-05-01' existing = {
+  name: nsgName
+}
+
+// ── Managed disk ──────────────────────────────────────────────────────────────
 
 resource managedDisk 'Microsoft.Compute/disks@2025-01-02' = {
   name: diskName
@@ -89,18 +111,23 @@ resource managedDisk 'Microsoft.Compute/disks@2025-01-02' = {
   }
 }
 
+// ── Network interfaces ────────────────────────────────────────────────────────
+
 resource nic 'Microsoft.Network/networkInterfaces@2025-05-01' = {
   name: nicName
   location: location
   tags: tags
   properties: {
+    networkSecurityGroup: {
+      id: nsg.id
+    }
     ipConfigurations: [
       {
         name: 'ipconfig1'
         properties: {
           privateIPAllocationMethod: 'Dynamic'
           subnet: {
-            id: subnetId
+            id: subnet1.id
           }
         }
       }
@@ -113,6 +140,9 @@ resource nic2 'Microsoft.Network/networkInterfaces@2025-05-01' = {
   location: location
   tags: tags
   properties: {
+    networkSecurityGroup: {
+      id: nsg.id
+    }
     ipConfigurations: [
       {
         name: 'ipconfig1'
@@ -120,13 +150,15 @@ resource nic2 'Microsoft.Network/networkInterfaces@2025-05-01' = {
           privateIPAllocationMethod: 'Static'
           privateIPAddress: nic2PrivateIpAddress
           subnet: {
-            id: nic2SubnetId
+            id: subnet2.id
           }
         }
       }
     ]
   }
 }
+
+// ── Virtual machine ───────────────────────────────────────────────────────────
 
 resource vm 'Microsoft.Compute/virtualMachines@2025-04-01' = {
   name: vmName
