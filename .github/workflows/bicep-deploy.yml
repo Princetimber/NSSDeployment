@@ -375,9 +375,26 @@ jobs:
               fi
             done
 
-            # 4. NAT Gateway (before Public IP)
+            # 4. NAT Gateway — detach from all subnets first, then delete
             NATGW="natgw-nssdeployment-$env"
+            VNET="vnet-nssdeployment-$env"
             if az network nat gateway show --resource-group "$rg" --name "$NATGW" &>/dev/null; then
+              echo "Detaching NAT Gateway $NATGW from any subnets..."
+              while IFS= read -r SUBNET; do
+                [ -z "$SUBNET" ] && continue
+                echo " - Removing NAT Gateway from subnet: $SUBNET"
+                az network vnet subnet update \
+                  --resource-group "$rg" \
+                  --vnet-name "$VNET" \
+                  --name "$SUBNET" \
+                  --remove natGateway
+              done < <(
+                az network vnet subnet list \
+                  --resource-group "$rg" \
+                  --vnet-name "$VNET" \
+                  --query "[?natGateway!=null].name" \
+                  -o tsv 2>/dev/null || true
+              )
               echo "Deleting NAT Gateway $NATGW..."
               az network nat gateway delete --resource-group "$rg" --name "$NATGW"
             fi
