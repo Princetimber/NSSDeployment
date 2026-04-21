@@ -29,17 +29,10 @@ param storageAccountName string
 param vnetName string
 
 @description('Required: subnet names allowed to access the storage account.')
-@allowed([
-  'subnet1'
-  'subnet2'
-])
 param subnets array
 
 @description('Required: public IP address allowed to access the storage account.')
 param publicIpAddress string
-
-@description('Optional: blob container name for VHD uploads.')
-param vhdContainerName string = 'vhds'
 
 module storageAccount './storage.bicep' = {
   name: '${projectName}-storage'
@@ -52,11 +45,8 @@ module storageAccount './storage.bicep' = {
     vnetName: vnetName
     subnets: subnets
     publicIpAddress: publicIpAddress
-    vhdContainerName: vhdContainerName
   }
 }
 
 output storageAccountId string = storageAccount.outputs.storageAccountId
-output storageAccountName string = storageAccount.outputs.storageAccountNameOutput
-output vhdContainerName string = storageAccount.outputs.vhdContainerName
-output vhdContainerUri string = storageAccount.outputs.vhdContainerUri
+output storageAccountName string = storageAccount.outputs.storageAccountName

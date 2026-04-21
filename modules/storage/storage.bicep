@@ -66,9 +66,6 @@ param subnets array
 @description('Required: Public IP address allowed to access storage account. It defaults to the IP address of the machine running the deployment.')
 param publicIpAddress string
 
-@description('Optional: name of the blob container for VHD uploads. Defaults to vhds.')
-param vhdContainerName string = 'vhds'
-
 resource storageAccountNew 'Microsoft.Storage/storageAccounts@2025-08-01' = if (storageAccountNewOrExisting == 'new' && storageAccountName != '') {
   name: storageAccountName
   location: location
@@ -104,23 +101,7 @@ resource storageAccountExisting 'Microsoft.Storage/storageAccounts@2025-08-01' e
   name: storageAccountName
 }
 
-resource blobServiceNew 'Microsoft.Storage/storageAccounts/blobServices@2025-08-01' = if (storageAccountNewOrExisting == 'new' && storageAccountName != '') {
-  parent: storageAccountNew
-  name: 'default'
-  properties: {}
-}
-
-resource vhdContainerNew 'Microsoft.Storage/storageAccounts/blobServices/containers@2025-08-01' = if (storageAccountNewOrExisting == 'new' && storageAccountName != '') {
-  parent: blobServiceNew
-  name: vhdContainerName
-  properties: {
-    publicAccess: 'None'
-  }
-}
-
 var resolvedAccountName = storageAccountNewOrExisting == 'new' ? storageAccountNew.name : storageAccountExisting.name
 
 output storageAccountId string = storageAccountNewOrExisting == 'new' ? storageAccountNew.id : storageAccountExisting.id
-output storageAccountNameOutput string = resolvedAccountName
-output vhdContainerName string = vhdContainerName
-output vhdContainerUri string = 'https://${resolvedAccountName}.blob.${environment().suffixes.storage}/${vhdContainerName}'
+output storageAccountName string = resolvedAccountName

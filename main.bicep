@@ -87,9 +87,6 @@ param subnets array
 @description('Required: public IP address allowed to access the storage account.')
 param publicIpAddress string
 
-@description('Optional: blob container name for VHD uploads. Defaults to vhds.')
-param vhdContainerName string = 'vhds'
-
 module storage './modules/storage/main.bicep' = {
   name: 'storageDeploy'
   params: {
@@ -101,7 +98,6 @@ module storage './modules/storage/main.bicep' = {
     vnetName: vnetName
     subnets: subnets
     publicIpAddress: publicIpAddress
-    vhdContainerName: vhdContainerName
   }
   // VNet and subnets must exist before storage sets up service endpoint rules
   dependsOn: [networking]
@@ -132,7 +128,4 @@ output natGatewayPublicIpName string = networking.outputs.publicIpName
 
 @description('Storage account resource ID.')
 output storageAccountId string = storage.outputs.storageAccountId
-
-@description('VHD container URI — upload your VHD here before deploying compute.')
-output vhdContainerUri string = storage.outputs.vhdContainerUri
 
