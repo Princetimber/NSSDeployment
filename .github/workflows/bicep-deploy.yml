@@ -68,6 +68,16 @@ jobs:
           else
             echo "Stale NIC $STALE_NIC not found — nothing to clean up."
           fi
+
+          # Delete any NSG that does not match the canonical naming convention
+          EXPECTED_NSG="nsg-nssdeployment-dev"
+          az network nsg list --resource-group "$RG" --query "[].name" -o tsv | while read -r NSG; do
+            if [ "$NSG" != "$EXPECTED_NSG" ]; then
+              echo "Deleting stale NSG $NSG..."
+              az network nsg delete --resource-group "$RG" --name "$NSG"
+              echo "Deleted $NSG."
+            fi
+          done
       - name: Deploy
         shell: bash
         run: |
@@ -160,6 +170,15 @@ jobs:
           else
             echo "Stale NIC $STALE_NIC not found — nothing to clean up."
           fi
+
+          EXPECTED_NSG="nsg-nssdeployment-staging"
+          az network nsg list --resource-group "$RG" --query "[].name" -o tsv | while read -r NSG; do
+            if [ "$NSG" != "$EXPECTED_NSG" ]; then
+              echo "Deleting stale NSG $NSG..."
+              az network nsg delete --resource-group "$RG" --name "$NSG"
+              echo "Deleted $NSG."
+            fi
+          done
       - name: Deploy
         shell: bash
         run: |
@@ -252,6 +271,15 @@ jobs:
           else
             echo "Stale NIC $STALE_NIC not found — nothing to clean up."
           fi
+
+          EXPECTED_NSG="nsg-nssdeployment-prod"
+          az network nsg list --resource-group "$RG" --query "[].name" -o tsv | while read -r NSG; do
+            if [ "$NSG" != "$EXPECTED_NSG" ]; then
+              echo "Deleting stale NSG $NSG..."
+              az network nsg delete --resource-group "$RG" --name "$NSG"
+              echo "Deleted $NSG."
+            fi
+          done
       - name: Deploy
         shell: bash
         run: |
