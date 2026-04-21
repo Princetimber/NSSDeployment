@@ -78,6 +78,18 @@ jobs:
               echo "Deleted $NSG."
             fi
           done
+
+          # Delete any existing Key Vault Secrets User role assignments on the KV
+          # so ARM can create a fresh one after VM recreation (avoids RoleAssignmentUpdateNotPermitted)
+          KV_ID=$(az keyvault show --name "kv-nssdeployment-dev" --resource-group "$RG" \
+            --query id -o tsv 2>/dev/null || true)
+          if [ -n "$KV_ID" ]; then
+            echo "Removing stale Key Vault Secrets User role assignments from $KV_ID..."
+            az role assignment delete \
+              --scope "$KV_ID" \
+              --role "4633458b-17de-408a-b874-0445c86b69e6" \
+              2>/dev/null || echo "No stale role assignments to remove."
+          fi
       - name: Deploy
         shell: bash
         run: |
@@ -179,6 +191,17 @@ jobs:
               echo "Deleted $NSG."
             fi
           done
+
+          # Delete any existing Key Vault Secrets User role assignments on the KV
+          KV_ID=$(az keyvault show --name "kv-nssdeployment-staging" --resource-group "$RG" \
+            --query id -o tsv 2>/dev/null || true)
+          if [ -n "$KV_ID" ]; then
+            echo "Removing stale Key Vault Secrets User role assignments from $KV_ID..."
+            az role assignment delete \
+              --scope "$KV_ID" \
+              --role "4633458b-17de-408a-b874-0445c86b69e6" \
+              2>/dev/null || echo "No stale role assignments to remove."
+          fi
       - name: Deploy
         shell: bash
         run: |
@@ -280,6 +303,17 @@ jobs:
               echo "Deleted $NSG."
             fi
           done
+
+          # Delete any existing Key Vault Secrets User role assignments on the KV
+          KV_ID=$(az keyvault show --name "kv-nssdeployment-prod" --resource-group "$RG" \
+            --query id -o tsv 2>/dev/null || true)
+          if [ -n "$KV_ID" ]; then
+            echo "Removing stale Key Vault Secrets User role assignments from $KV_ID..."
+            az role assignment delete \
+              --scope "$KV_ID" \
+              --role "4633458b-17de-408a-b874-0445c86b69e6" \
+              2>/dev/null || echo "No stale role assignments to remove."
+          fi
       - name: Deploy
         shell: bash
         run: |

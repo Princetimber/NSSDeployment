@@ -130,14 +130,13 @@ module compute './modules/compute/main.bicep' = {
 
 var keyVaultSecretsUserRoleId = '4633458b-17de-408a-b874-0445c86b69e6'
 var kvName = 'kv-${toLower(projectName)}-${toLower(environmentName)}'
-var vmName = 'vm-${toLower(projectName)}-${toLower(environmentName)}'
 
 resource kv 'Microsoft.KeyVault/vaults@2025-05-01' existing = {
   name: kvName
 }
 
 resource kvRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(resourceId('Microsoft.KeyVault/vaults', kvName), resourceId('Microsoft.Compute/virtualMachines', vmName), keyVaultSecretsUserRoleId)
+  name: guid(resourceId('Microsoft.KeyVault/vaults', kvName), resourceId('Microsoft.Compute/virtualMachines', 'vm-${toLower(projectName)}-${toLower(environmentName)}'), keyVaultSecretsUserRoleId)
   scope: kv
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultSecretsUserRoleId)
