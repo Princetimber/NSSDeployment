@@ -327,3 +327,100 @@ jobs:
             dump_failures "$RG" "$DEPLOYMENT_NAME"
             exit 1
           fi
+
+  # ── Post-prod cleanup ────────────────────────────────────────────────────────
+  # After a full push-triggered deploy succeeds in prod, remove all resources
+  # from dev and staging resource groups (RGs themselves are kept).
+  cleanup-non-prod:
+    name: Cleanup dev and staging after prod
+    runs-on: ubuntu-latest
+    needs: [deploy-prod]
+    # Only run on push-triggered full pipeline runs, not manual single-env dispatches
+    if: needs.deploy-prod.result == 'success' && github.event_name == 'push'
+    steps:
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Remove all resources from dev and staging
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cleanup_env() {
+            local rg="$1" env="$2" sa="$3"
+            echo "====== Cleaning up $rg ======"
+
+            # 1. VM — must go first so NICs and disk become detachable
+            VM="vm-nssdeployment-$env"
+            if az vm show --resource-group "$rg" --name "$VM" &>/dev/null; then
+              echo "Deleting VM $VM..."
+              az vm delete --resource-group "$rg" --name "$VM" --yes
+            fi
+
+            # 2. Managed disk
+            DISK="disk-nssdeployment-$env"
+            if az disk show --resource-group "$rg" --name "$DISK" &>/dev/null; then
+              echo "Deleting disk $DISK..."
+              az disk delete --resource-group "$rg" --name "$DISK" --yes
+            fi
+
+            # 3. NICs (current names + old name pre-rename)
+            for NIC in "nic1-nssdeployment-$env" "nic2-nssdeployment-$env" "nic-nssdeployment-$env"; do
+              if az network nic show --resource-group "$rg" --name "$NIC" &>/dev/null; then
+                echo "Deleting NIC $NIC..."
+                az network nic delete --resource-group "$rg" --name "$NIC"
+              fi
+            done
+
+            # 4. NAT Gateway (before Public IP)
+            NATGW="natgw-nssdeployment-$env"
+            if az network nat gateway show --resource-group "$rg" --name "$NATGW" &>/dev/null; then
+              echo "Deleting NAT Gateway $NATGW..."
+              az network nat gateway delete --resource-group "$rg" --name "$NATGW"
+            fi
+
+            # 5. VNet + subnets
+            VNET="vnet-nssdeployment-$env"
+            if az network vnet show --resource-group "$rg" --name "$VNET" &>/dev/null; then
+              echo "Deleting VNet $VNET..."
+              az network vnet delete --resource-group "$rg" --name "$VNET"
+            fi
+
+            # 6. All NSGs
+            while IFS= read -r NSG; do
+              [ -z "$NSG" ] && continue
+              echo "Deleting NSG $NSG..."
+              az network nsg delete --resource-group "$rg" --name "$NSG"
+            done < <(az network nsg list --resource-group "$rg" --query "[].name" -o tsv 2>/dev/null || true)
+
+            # 7. All Public IPs
+            while IFS= read -r PIP; do
+              [ -z "$PIP" ] && continue
+              echo "Deleting Public IP $PIP..."
+              az network public-ip delete --resource-group "$rg" --name "$PIP"
+            done < <(az network public-ip list --resource-group "$rg" --query "[].name" -o tsv 2>/dev/null || true)
+
+            # 8. Storage account
+            if az storage account show --resource-group "$rg" --name "$sa" &>/dev/null; then
+              echo "Deleting storage account $sa..."
+              az storage account delete --resource-group "$rg" --name "$sa" --yes
+            fi
+
+            # 9. Key Vault — delete then purge so the name is freed immediately
+            KV="kv-nssdeployment-$env"
+            if az keyvault show --resource-group "$rg" --name "$KV" &>/dev/null; then
+              echo "Deleting Key Vault $KV..."
+              az keyvault delete --resource-group "$rg" --name "$KV"
+              echo "Purging Key Vault $KV..."
+              az keyvault purge --name "$KV" --location uksouth \
+                || echo "Purge skipped (purge protection enabled or already purged)."
+            fi
+
+            echo "====== $rg cleanup complete ======"
+          }
+
+          cleanup_env "rg-NSSDeployment-dev"     "dev"     "stnssdeploymentdev"
+          cleanup_env "rg-NSSDeployment-staging" "staging" "stnssdeploymentstg"
