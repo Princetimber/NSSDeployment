@@ -43,12 +43,37 @@ jobs:
       - name: Bicep lint
         run: az bicep build --file main.bicep
       - name: Deploy
+        shell: bash
         run: |
-          az deployment group create \
-            --name deploy-dev-${{ github.run_number }} \
-            --resource-group rg-NSSDeployment-dev \
+          set -euo pipefail
+
+          DEPLOYMENT_NAME="deploy-dev-${{ github.run_number }}"
+          RG="rg-NSSDeployment-dev"
+
+          if ! az deployment group create \
+            --name "$DEPLOYMENT_NAME" \
+            --resource-group "$RG" \
             --template-file main.bicep \
-            --parameters environments/dev/main.bicepparam
+            --parameters environments/dev/main.bicepparam \
+            --only-show-errors; then
+
+            echo "::error::Deployment failed — dumping operation details for $DEPLOYMENT_NAME"
+
+            az deployment operation group list \
+              --resource-group "$RG" \
+              --name "$DEPLOYMENT_NAME" \
+              --query "[?properties.provisioningState=='Failed'].{resource:properties.targetResource.resourceName,type:properties.targetResource.resourceType,code:properties.statusMessage.error.code,message:properties.statusMessage.error.message}" \
+              -o table || true
+
+            echo "--- full error payload ---"
+            az deployment group show \
+              --resource-group "$RG" \
+              --name "$DEPLOYMENT_NAME" \
+              --query "properties.error" \
+              -o jsonc || true
+
+            exit 1
+          fi
 
   deploy-staging:
     name: Deploy to staging
@@ -73,12 +98,37 @@ jobs:
       - name: Bicep lint
         run: az bicep build --file main.bicep
       - name: Deploy
+        shell: bash
         run: |
-          az deployment group create \
-            --name deploy-staging-${{ github.run_number }} \
-            --resource-group rg-NSSDeployment-staging \
+          set -euo pipefail
+
+          DEPLOYMENT_NAME="deploy-staging-${{ github.run_number }}"
+          RG="rg-NSSDeployment-staging"
+
+          if ! az deployment group create \
+            --name "$DEPLOYMENT_NAME" \
+            --resource-group "$RG" \
             --template-file main.bicep \
-            --parameters environments/staging/main.bicepparam
+            --parameters environments/staging/main.bicepparam \
+            --only-show-errors; then
+
+            echo "::error::Deployment failed — dumping operation details for $DEPLOYMENT_NAME"
+
+            az deployment operation group list \
+              --resource-group "$RG" \
+              --name "$DEPLOYMENT_NAME" \
+              --query "[?properties.provisioningState=='Failed'].{resource:properties.targetResource.resourceName,type:properties.targetResource.resourceType,code:properties.statusMessage.error.code,message:properties.statusMessage.error.message}" \
+              -o table || true
+
+            echo "--- full error payload ---"
+            az deployment group show \
+              --resource-group "$RG" \
+              --name "$DEPLOYMENT_NAME" \
+              --query "properties.error" \
+              -o jsonc || true
+
+            exit 1
+          fi
 
   deploy-prod:
     name: Deploy to prod (requires approval)
@@ -103,9 +153,34 @@ jobs:
       - name: Bicep lint
         run: az bicep build --file main.bicep
       - name: Deploy
+        shell: bash
         run: |
-          az deployment group create \
-            --name deploy-prod-${{ github.run_number }} \
-            --resource-group rg-NSSDeployment-prod \
+          set -euo pipefail
+
+          DEPLOYMENT_NAME="deploy-prod-${{ github.run_number }}"
+          RG="rg-NSSDeployment-prod"
+
+          if ! az deployment group create \
+            --name "$DEPLOYMENT_NAME" \
+            --resource-group "$RG" \
             --template-file main.bicep \
-            --parameters environments/prod/main.bicepparam
+            --parameters environments/prod/main.bicepparam \
+            --only-show-errors; then
+
+            echo "::error::Deployment failed — dumping operation details for $DEPLOYMENT_NAME"
+
+            az deployment operation group list \
+              --resource-group "$RG" \
+              --name "$DEPLOYMENT_NAME" \
+              --query "[?properties.provisioningState=='Failed'].{resource:properties.targetResource.resourceName,type:properties.targetResource.resourceType,code:properties.statusMessage.error.code,message:properties.statusMessage.error.message}" \
+              -o table || true
+
+            echo "--- full error payload ---"
+            az deployment group show \
+              --resource-group "$RG" \
+              --name "$DEPLOYMENT_NAME" \
+              --query "properties.error" \
+              -o jsonc || true
+
+            exit 1
+          fi
