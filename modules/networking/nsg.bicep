@@ -95,6 +95,20 @@ var securityRules = [
       description: 'Allow outbound NTP traffic'
     }
   }
+  {
+    name:'Allow-ICMP'
+    properties: {
+      priority: 160
+      direction: 'Outbound'
+      access: 'Allow'
+      protocol: 'Icmp'
+      sourceAddressPrefixes: sourceAddressPrefixes
+      sourcePortRange: '*'
+      destinationAddressPrefix: '*'
+      destinationPortRange: '*'
+      description: 'Allow outbound ICMP traffic'
+    }
+  }
 ]
 
 resource nsg 'Microsoft.Network/networkSecurityGroups@2025-05-01' = {
