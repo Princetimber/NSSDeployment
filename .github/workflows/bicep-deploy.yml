@@ -42,6 +42,19 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Bicep lint
         run: az bicep build --file main.bicep
+      - name: Pre-deploy — deallocate VM if it exists
+        shell: bash
+        run: |
+          RG="rg-NSSDeployment-dev"
+          VM="vm-nssdeployment-dev"
+          STATE=$(az vm show --resource-group "$RG" --name "$VM" --query "powerState" -d -o tsv 2>/dev/null || echo "NotFound")
+          if [ "$STATE" = "NotFound" ]; then
+            echo "VM $VM not found — skipping deallocation."
+          else
+            echo "VM $VM found (state: $STATE) — deallocating before NIC update..."
+            az vm deallocate --resource-group "$RG" --name "$VM"
+            echo "VM $VM deallocated."
+          fi
       - name: Deploy
         shell: bash
         run: |
@@ -110,6 +123,19 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Bicep lint
         run: az bicep build --file main.bicep
+      - name: Pre-deploy — deallocate VM if it exists
+        shell: bash
+        run: |
+          RG="rg-NSSDeployment-staging"
+          VM="vm-nssdeployment-staging"
+          STATE=$(az vm show --resource-group "$RG" --name "$VM" --query "powerState" -d -o tsv 2>/dev/null || echo "NotFound")
+          if [ "$STATE" = "NotFound" ]; then
+            echo "VM $VM not found — skipping deallocation."
+          else
+            echo "VM $VM found (state: $STATE) — deallocating before NIC update..."
+            az vm deallocate --resource-group "$RG" --name "$VM"
+            echo "VM $VM deallocated."
+          fi
       - name: Deploy
         shell: bash
         run: |
@@ -178,6 +204,19 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Bicep lint
         run: az bicep build --file main.bicep
+      - name: Pre-deploy — deallocate VM if it exists
+        shell: bash
+        run: |
+          RG="rg-NSSDeployment-prod"
+          VM="vm-nssdeployment-prod"
+          STATE=$(az vm show --resource-group "$RG" --name "$VM" --query "powerState" -d -o tsv 2>/dev/null || echo "NotFound")
+          if [ "$STATE" = "NotFound" ]; then
+            echo "VM $VM not found — skipping deallocation."
+          else
+            echo "VM $VM found (state: $STATE) — deallocating before NIC update..."
+            az vm deallocate --resource-group "$RG" --name "$VM"
+            echo "VM $VM deallocated."
+          fi
       - name: Deploy
         shell: bash
         run: |
