@@ -350,7 +350,7 @@ jobs:
           set -euo pipefail
 
           cleanup_env() {
-            local rg="$1" env="$2" sa="$3"
+            local rg="$1" env="$2"
             echo "====== Cleaning up $rg ======"
 
             # 1. VM — must go first so NICs and disk become detachable
@@ -403,13 +403,9 @@ jobs:
               az network public-ip delete --resource-group "$rg" --name "$PIP"
             done < <(az network public-ip list --resource-group "$rg" --query "[].name" -o tsv 2>/dev/null || true)
 
-            # 8. Storage account
-            if az storage account show --resource-group "$rg" --name "$sa" &>/dev/null; then
-              echo "Deleting storage account $sa..."
-              az storage account delete --resource-group "$rg" --name "$sa" --yes
-            fi
+            # Storage accounts are intentionally left untouched.
 
-            # 9. Key Vault — delete then purge so the name is freed immediately
+            # 8. Key Vault — delete then purge so the name is freed immediately
             KV="kv-nssdeployment-$env"
             if az keyvault show --resource-group "$rg" --name "$KV" &>/dev/null; then
               echo "Deleting Key Vault $KV..."
@@ -422,5 +418,5 @@ jobs:
             echo "====== $rg cleanup complete ======"
           }
 
-          cleanup_env "rg-NSSDeployment-dev"     "dev"     "stnssdeploymentdev"
-          cleanup_env "rg-NSSDeployment-staging" "staging" "stnssdeploymentstg"
+          cleanup_env "rg-NSSDeployment-dev"     "dev"
+          cleanup_env "rg-NSSDeployment-staging" "staging"
