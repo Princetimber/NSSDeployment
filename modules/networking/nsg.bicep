@@ -63,7 +63,7 @@ var securityRules = [
       sourceAddressPrefixes: sourceAddressPrefixes
       sourcePortRange: '*'
       destinationAddressPrefix:'199.168.148.101'
-      destinationPortRange: '443'
+      destinationPortRange: '12002'
       description: 'Allow outbound traffic to Zscaler Remote Support'
     }
   }
