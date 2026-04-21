@@ -457,21 +457,28 @@ jobs:
               az network nat gateway delete --resource-group "$rg" --name "$NATGW"
             fi
 
-            # 5. VNet + subnets
+            # 5. Bastion — must be deleted before the VNet (it sits in AzureBastionSubnet)
+            BASTION="bas-nssdeployment-$env"
+            if az network bastion show --resource-group "$rg" --name "$BASTION" &>/dev/null; then
+              echo "Deleting Bastion $BASTION..."
+              az network bastion delete --resource-group "$rg" --name "$BASTION"
+            fi
+
+            # 6. VNet + subnets
             VNET="vnet-nssdeployment-$env"
             if az network vnet show --resource-group "$rg" --name "$VNET" &>/dev/null; then
               echo "Deleting VNet $VNET..."
               az network vnet delete --resource-group "$rg" --name "$VNET"
             fi
 
-            # 6. All NSGs
+            # 7. All NSGs
             while IFS= read -r NSG; do
               [ -z "$NSG" ] && continue
               echo "Deleting NSG $NSG..."
               az network nsg delete --resource-group "$rg" --name "$NSG"
             done < <(az network nsg list --resource-group "$rg" --query "[].name" -o tsv 2>/dev/null || true)
 
-            # 7. All Public IPs
+            # 8. All Public IPs (includes pip-bastion-* after Bastion is deleted)
             while IFS= read -r PIP; do
               [ -z "$PIP" ] && continue
               echo "Deleting Public IP $PIP..."
@@ -480,7 +487,7 @@ jobs:
 
             # Storage accounts are intentionally left untouched.
 
-            # 8. Key Vault — delete then purge so the name is freed immediately
+            # 9. Key Vault — delete then purge so the name is freed immediately
             KV="kv-nssdeployment-$env"
             if az keyvault show --resource-group "$rg" --name "$KV" &>/dev/null; then
               echo "Deleting Key Vault $KV..."
