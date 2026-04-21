@@ -78,6 +78,10 @@ module networking './modules/networking/main.bicep' = {
 @description('Required: storage account name (3–24 lowercase alphanumeric).')
 param storageAccountName string
 
+@description('Whether to create a new storage account or reference an existing one.')
+@allowed(['new', 'existing'])
+param storageNewOrExisting string = 'new'
+
 module storage './modules/storage/main.bicep' = {
   name: 'storageDeploy'
   params: {
@@ -85,17 +89,15 @@ module storage './modules/storage/main.bicep' = {
     environmentName: environmentName
     projectName: projectName
     storageAccountName: storageAccountName
+    storageNewOrExisting: storageNewOrExisting
   }
 }
 
 // ── Compute ───────────────────────────────────────────────────────────────────
 
-@description('Required: full SAS URI of the VHD blob to import (blob URL + SAS token).')
+@description('Required: full SAS URI of the VHD blob to import (blob URL + SAS token). Injected at deploy time — do not set in .bicepparam files.')
 @secure()
 param vhdSasUri string
-
-@description('Required: resource ID of the source storage account holding the VHD.')
-param storageAccountId string
 
 @description('Required: resource ID of the subnet for the VM network interface.')
 param subnetId string
@@ -120,7 +122,7 @@ module compute './modules/compute/main.bicep' = {
     projectName: projectName
     tags: tags
     vhdSasUri: vhdSasUri
-    storageAccountId: storageAccountId
+    storageAccountId: storage.outputs.storageAccountId
     subnetId: subnetId
     vmSize: vmSize
   }

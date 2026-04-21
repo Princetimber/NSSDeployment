@@ -31,7 +31,11 @@ param tags object = {
   Owner: ownerName
 }
 
-resource storageAccount 'Microsoft.Storage/storageAccounts@2025-08-01' = {
+@description('Whether to create a new storage account or reference an existing one.')
+@allowed(['new', 'existing'])
+param storageNewOrExisting string = 'new'
+
+resource storageAccountNew 'Microsoft.Storage/storageAccounts@2025-08-01' = if (storageNewOrExisting == 'new') {
   name: storageAccountName
   location: location
   tags: tags
@@ -48,5 +52,11 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2025-08-01' = {
   }
 }
 
-output storageAccountId string = storageAccount.id
-output storageAccountName string = storageAccount.name
+// Always declared so the resource ID is resolvable regardless of storageNewOrExisting value.
+// When storageNewOrExisting == 'new', this reference resolves the account created above.
+resource storageAccountRef 'Microsoft.Storage/storageAccounts@2025-08-01' existing = {
+  name: storageAccountName
+}
+
+output storageAccountId string = storageAccountRef.id
+output storageAccountName string = storageAccountRef.name

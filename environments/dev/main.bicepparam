@@ -60,14 +60,13 @@ param natGatewaySubnets = [
 ]
 
 // ── Storage ────────────────────────────────────────────────────────────────────
-param storageAccountName = 'stnssdeploymentdev'
+param storageAccountName   = 'stnssdeploymentdev'
+param storageNewOrExisting = 'existing'
 
 // ── Compute ────────────────────────────────────────────────────────────────────
-// vhdSasUri is NOT set here — it is injected at deploy time from the
-// AZURE_VHD_SAS_URI GitHub Actions secret (or passed via --parameters on the CLI)
-// to avoid committing a secret to the repository.
-// Resource ID of the storage account that holds the VHD.
-param storageAccountId = '/subscriptions/07940160-ad0c-43f6-a228-ed5f3baaf990/resourceGroups/rg-NSSDeployment-dev/providers/Microsoft.Storage/storageAccounts/znssprodeu'
+// vhdSasUri is NOT set here — generated at deploy time by the workflow using the
+// storage account key, to avoid committing a SAS token to the repository.
+// storageAccountId is derived from the storage module output (not a top-level param).
 // Subnet resource ID for the VM NIC.
 param subnetId = '/subscriptions/07940160-ad0c-43f6-a228-ed5f3baaf990/resourceGroups/rg-NSSDeployment-dev/providers/Microsoft.Network/virtualNetworks/vnet-nssdeployment-dev/subnets/subnet1'
 param vmSize   = 'Standard_D2s_v3'

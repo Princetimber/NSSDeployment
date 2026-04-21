@@ -60,11 +60,13 @@ param natGatewaySubnets = [
 ]
 
 // ── Storage ────────────────────────────────────────────────────────────────────
-param storageAccountName = 'stnssdeploymentprod'
+param storageAccountName   = 'stnssdeploymentprod'
+param storageNewOrExisting = 'existing'
 
 // ── Compute ────────────────────────────────────────────────────────────────────
-// vhdSasUri is NOT set here — injected at deploy time from AZURE_VHD_SAS_URI GitHub secret.
-param storageAccountId = '/subscriptions/07940160-ad0c-43f6-a228-ed5f3baaf990/resourceGroups/rg-NSSDeployment-dev/providers/Microsoft.Storage/storageAccounts/znssprodeu'
-param subnetId       = '/subscriptions/07940160-ad0c-43f6-a228-ed5f3baaf990/resourceGroups/rg-NSSDeployment-prod/providers/Microsoft.Network/virtualNetworks/vnet-nssdeployment-prod/subnets/subnet1'
-param vmSize         = 'Standard_D4s_v3'
+// vhdSasUri is NOT set here — generated at deploy time by the workflow using the
+// storage account key, to avoid committing a SAS token to the repository.
+// storageAccountId is derived from the storage module output (not a top-level param).
+param subnetId = '/subscriptions/07940160-ad0c-43f6-a228-ed5f3baaf990/resourceGroups/rg-NSSDeployment-prod/providers/Microsoft.Network/virtualNetworks/vnet-nssdeployment-prod/subnets/subnet1'
+param vmSize   = 'Standard_D4s_v3'
 

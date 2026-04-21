@@ -18,6 +18,10 @@ param ownerName string = ''
 @description('Required: storage account name (3–24 lowercase alphanumeric).')
 param storageAccountName string
 
+@description('Whether to create a new storage account or reference an existing one.')
+@allowed(['new', 'existing'])
+param storageNewOrExisting string = 'new'
+
 module storageAccount './storage.bicep' = {
   name: '${projectName}-storage'
   params: {
@@ -25,6 +29,7 @@ module storageAccount './storage.bicep' = {
     location: location
     environmentName: environmentName
     ownerName: ownerName
+    storageNewOrExisting: storageNewOrExisting
   }
 }
 
