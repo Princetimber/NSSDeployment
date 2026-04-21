@@ -10,7 +10,7 @@ param sshPublicKeySecretName = 'ssh-public-key'
 // Replace with your public key (e.g. contents of ~/.ssh/id_rsa.pub).
 // For CI/CD use getSecret() once the Key Vault exists:
 //   param sshPublicKey = getSecret('<subscriptionId>', 'rg-NSSDeployment-dev', 'kv-nssdeployment-dev', 'ssh-public-key')
-param sshPublicKey = ''
+param sshPublicKey = 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIARcqG6gkdopG6LKR8XcguVUzZob9hyTjLyCyalmFv1i zadmin@mymachines'
 
 // ── Networking ─────────────────────────────────────────────────────────────────
 // NSG: nsg-nssdeployment-dev | VNet: vnet-nssdeployment-dev | NAT GW: natgw-nssdeployment-dev
