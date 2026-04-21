@@ -51,44 +51,39 @@ jobs:
           RG="rg-NSSDeployment-dev"
 
           dump_failures() {
-            local rg="$1" name="$2"
-            echo "--- failed operations: $name ---"
+            local rg="$1" name="$2" depth="${3:-0}"
+            if [ "$depth" -gt 6 ]; then
+              echo "::warning::Max nested deployment depth reached at $name"
+              return 0
+            fi
+            echo "--- failed operations (depth=$depth): $name ---"
             az deployment operation group list \
               --resource-group "$rg" --name "$name" \
               --query "[?properties.provisioningState=='Failed'].{resource:properties.targetResource.resourceName,type:properties.targetResource.resourceType,code:properties.statusMessage.error.code,message:properties.statusMessage.error.message}" \
               -o table || true
-
-            local nested
-            nested=$(az deployment operation group list \
-              --resource-group "$rg" --name "$name" \
-              --query "[?properties.provisioningState=='Failed' && properties.targetResource.resourceType=='Microsoft.Resources/deployments'].properties.targetResource.resourceName | [0]" \
-              -o tsv 2>/dev/null || true)
-
-            if [ -n "$nested" ]; then
-              echo "--- nested deployment: $nested ---"
-              az deployment operation group list \
-                --resource-group "$rg" --name "$nested" \
-                --query "[?properties.provisioningState=='Failed'].{resource:properties.targetResource.resourceName,type:properties.targetResource.resourceType,code:properties.statusMessage.error.code,message:properties.statusMessage.error.message}" \
-                -o table || true
-
-              echo "--- full nested error payload ---"
-              az deployment group show \
-                --resource-group "$rg" --name "$nested" \
-                --query "properties.error" -o jsonc || true
-            fi
-
-            echo "--- full top-level error payload ---"
+            echo "--- deployment error payload: $name ---"
             az deployment group show \
               --resource-group "$rg" --name "$name" \
               --query "properties.error" -o jsonc || true
+            mapfile -t nested_deployments < <(
+              az deployment operation group list \
+                --resource-group "$rg" --name "$name" \
+                --query "[?properties.provisioningState=='Failed' && properties.targetResource.resourceType=='Microsoft.Resources/deployments'].properties.targetResource.resourceName" \
+                -o tsv 2>/dev/null || true
+            )
+            for nested in "${nested_deployments[@]}"; do
+              if [ -n "$nested" ]; then
+                echo "--- nested deployment detected: $nested ---"
+                dump_failures "$rg" "$nested" "$((depth+1))"
+              fi
+            done
           }
 
           if ! az deployment group create \
             --name "$DEPLOYMENT_NAME" \
             --resource-group "$RG" \
             --template-file main.bicep \
-            --parameters environments/dev/main.bicepparam \
-            --only-show-errors; then
+            --parameters environments/dev/main.bicepparam; then
 
             echo "::error::Deployment failed — dumping operation details for $DEPLOYMENT_NAME"
             dump_failures "$RG" "$DEPLOYMENT_NAME"
@@ -124,44 +119,39 @@ jobs:
           RG="rg-NSSDeployment-staging"
 
           dump_failures() {
-            local rg="$1" name="$2"
-            echo "--- failed operations: $name ---"
+            local rg="$1" name="$2" depth="${3:-0}"
+            if [ "$depth" -gt 6 ]; then
+              echo "::warning::Max nested deployment depth reached at $name"
+              return 0
+            fi
+            echo "--- failed operations (depth=$depth): $name ---"
             az deployment operation group list \
               --resource-group "$rg" --name "$name" \
               --query "[?properties.provisioningState=='Failed'].{resource:properties.targetResource.resourceName,type:properties.targetResource.resourceType,code:properties.statusMessage.error.code,message:properties.statusMessage.error.message}" \
               -o table || true
-
-            local nested
-            nested=$(az deployment operation group list \
-              --resource-group "$rg" --name "$name" \
-              --query "[?properties.provisioningState=='Failed' && properties.targetResource.resourceType=='Microsoft.Resources/deployments'].properties.targetResource.resourceName | [0]" \
-              -o tsv 2>/dev/null || true)
-
-            if [ -n "$nested" ]; then
-              echo "--- nested deployment: $nested ---"
-              az deployment operation group list \
-                --resource-group "$rg" --name "$nested" \
-                --query "[?properties.provisioningState=='Failed'].{resource:properties.targetResource.resourceName,type:properties.targetResource.resourceType,code:properties.statusMessage.error.code,message:properties.statusMessage.error.message}" \
-                -o table || true
-
-              echo "--- full nested error payload ---"
-              az deployment group show \
-                --resource-group "$rg" --name "$nested" \
-                --query "properties.error" -o jsonc || true
-            fi
-
-            echo "--- full top-level error payload ---"
+            echo "--- deployment error payload: $name ---"
             az deployment group show \
               --resource-group "$rg" --name "$name" \
               --query "properties.error" -o jsonc || true
+            mapfile -t nested_deployments < <(
+              az deployment operation group list \
+                --resource-group "$rg" --name "$name" \
+                --query "[?properties.provisioningState=='Failed' && properties.targetResource.resourceType=='Microsoft.Resources/deployments'].properties.targetResource.resourceName" \
+                -o tsv 2>/dev/null || true
+            )
+            for nested in "${nested_deployments[@]}"; do
+              if [ -n "$nested" ]; then
+                echo "--- nested deployment detected: $nested ---"
+                dump_failures "$rg" "$nested" "$((depth+1))"
+              fi
+            done
           }
 
           if ! az deployment group create \
             --name "$DEPLOYMENT_NAME" \
             --resource-group "$RG" \
             --template-file main.bicep \
-            --parameters environments/staging/main.bicepparam \
-            --only-show-errors; then
+            --parameters environments/staging/main.bicepparam; then
 
             echo "::error::Deployment failed — dumping operation details for $DEPLOYMENT_NAME"
             dump_failures "$RG" "$DEPLOYMENT_NAME"
@@ -197,44 +187,39 @@ jobs:
           RG="rg-NSSDeployment-prod"
 
           dump_failures() {
-            local rg="$1" name="$2"
-            echo "--- failed operations: $name ---"
+            local rg="$1" name="$2" depth="${3:-0}"
+            if [ "$depth" -gt 6 ]; then
+              echo "::warning::Max nested deployment depth reached at $name"
+              return 0
+            fi
+            echo "--- failed operations (depth=$depth): $name ---"
             az deployment operation group list \
               --resource-group "$rg" --name "$name" \
               --query "[?properties.provisioningState=='Failed'].{resource:properties.targetResource.resourceName,type:properties.targetResource.resourceType,code:properties.statusMessage.error.code,message:properties.statusMessage.error.message}" \
               -o table || true
-
-            local nested
-            nested=$(az deployment operation group list \
-              --resource-group "$rg" --name "$name" \
-              --query "[?properties.provisioningState=='Failed' && properties.targetResource.resourceType=='Microsoft.Resources/deployments'].properties.targetResource.resourceName | [0]" \
-              -o tsv 2>/dev/null || true)
-
-            if [ -n "$nested" ]; then
-              echo "--- nested deployment: $nested ---"
-              az deployment operation group list \
-                --resource-group "$rg" --name "$nested" \
-                --query "[?properties.provisioningState=='Failed'].{resource:properties.targetResource.resourceName,type:properties.targetResource.resourceType,code:properties.statusMessage.error.code,message:properties.statusMessage.error.message}" \
-                -o table || true
-
-              echo "--- full nested error payload ---"
-              az deployment group show \
-                --resource-group "$rg" --name "$nested" \
-                --query "properties.error" -o jsonc || true
-            fi
-
-            echo "--- full top-level error payload ---"
+            echo "--- deployment error payload: $name ---"
             az deployment group show \
               --resource-group "$rg" --name "$name" \
               --query "properties.error" -o jsonc || true
+            mapfile -t nested_deployments < <(
+              az deployment operation group list \
+                --resource-group "$rg" --name "$name" \
+                --query "[?properties.provisioningState=='Failed' && properties.targetResource.resourceType=='Microsoft.Resources/deployments'].properties.targetResource.resourceName" \
+                -o tsv 2>/dev/null || true
+            )
+            for nested in "${nested_deployments[@]}"; do
+              if [ -n "$nested" ]; then
+                echo "--- nested deployment detected: $nested ---"
+                dump_failures "$rg" "$nested" "$((depth+1))"
+              fi
+            done
           }
 
           if ! az deployment group create \
             --name "$DEPLOYMENT_NAME" \
             --resource-group "$RG" \
             --template-file main.bicep \
-            --parameters environments/prod/main.bicepparam \
-            --only-show-errors; then
+            --parameters environments/prod/main.bicepparam; then
 
             echo "::error::Deployment failed — dumping operation details for $DEPLOYMENT_NAME"
             dump_failures "$RG" "$DEPLOYMENT_NAME"
