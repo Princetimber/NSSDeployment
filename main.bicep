@@ -57,6 +57,9 @@ param dnsServers array
 @description('Required: subnets to associate with the NAT Gateway. Same object shape as networkingSubnets.')
 param natGatewaySubnets array
 
+@description('Required: CIDR of the AzureBastionSubnet (/26 or larger, must not overlap other subnets).')
+param bastionSubnetAddressPrefix string
+
 module networking './modules/networking/main.bicep' = {
   name: 'networkingDeploy'
   params: {
@@ -70,6 +73,7 @@ module networking './modules/networking/main.bicep' = {
     subnets: networkingSubnets
     dnsServers: dnsServers
     natGatewaySubnets: natGatewaySubnets
+    bastionSubnetAddressPrefix: bastionSubnetAddressPrefix
   }
 }
 
@@ -161,6 +165,12 @@ output keyVaultUri string = security.outputs.keyVaultUri
 
 @description('NSG resource ID.')
 output nsgId string = networking.outputs.nsgId
+
+@description('Azure Bastion resource ID.')
+output bastionId string = networking.outputs.bastionId
+
+@description('Azure Bastion resource name.')
+output bastionName string = networking.outputs.bastionName
 
 @description('Virtual network resource ID.')
 output vnetId string = networking.outputs.vnetId

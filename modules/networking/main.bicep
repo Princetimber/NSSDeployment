@@ -40,6 +40,9 @@ param dnsServers array
 @description('Required: subnets to associate with the NAT Gateway after the VNet is provisioned.')
 param natGatewaySubnets array
 
+@description('Required: CIDR of the AzureBastionSubnet — used to scope the Bastion SSH inbound rule.')
+param bastionSubnetAddressPrefix string
+
 // Explicit name keeps nsg.bicep and vnet.bicep (which looks up the NSG as `existing`)
 // in sync — both must use the same formula: nsg-<projectName>-<environmentName>.
 var nsgName = 'nsg-${toLower(projectName)}-${toLower(environmentName)}'
@@ -54,6 +57,7 @@ module nsg 'nsg.bicep' = {
     sourceAddressPrefixes: sourceAddressPrefixes
     ownerName: ownerName
     environmentName: environmentName
+    bastionSubnetAddressPrefix: bastionSubnetAddressPrefix
   }
 }
 
@@ -89,6 +93,17 @@ module natgw 'natgw.bicep' = {
   dependsOn: [vnet]
 }
 
+module bastion 'bastion.bicep' = {
+  name: '${projectName}-bastion'
+  params: {
+    location: location
+    environmentName: environmentName
+    projectName: projectName
+    tags: tags
+  }
+  dependsOn: [vnet]
+}
+
 output nsgId string = nsg.outputs.nsgId
 output nsgName string = nsg.outputs.nsgName
 output vnetId string = vnet.outputs.id
@@ -97,3 +112,5 @@ output natGatewayId string = natgw.outputs.natGatewayId
 output natGatewayName string = natgw.outputs.natGatewayName
 output publicIpId string = natgw.outputs.publicIpId
 output publicIpName string = natgw.outputs.publicIpName
+output bastionId string = bastion.outputs.bastionId
+output bastionName string = bastion.outputs.bastionName

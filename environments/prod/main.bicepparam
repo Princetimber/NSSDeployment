@@ -43,7 +43,14 @@ param networkingSubnets = [
     name: 'subnet2'
     addressPrefix: '10.2.2.0/24'
   }
+  {
+    name: 'AzureBastionSubnet'
+    addressPrefix: '10.2.3.0/26'
+  }
 ]
+
+// Bastion subnet CIDR — must match the AzureBastionSubnet entry above.
+param bastionSubnetAddressPrefix = '10.2.3.0/26'
 
 // DNS servers for the VNet.
 param dnsServers = [
