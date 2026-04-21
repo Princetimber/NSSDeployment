@@ -45,6 +45,9 @@ resource bastion 'Microsoft.Network/bastionHosts@2025-05-01' = {
     name: 'Standard'
   }
   properties: {
+    enableTunneling: true       // Native client support (SSH/RDP via az network bastion)
+    enableIpConnect: true       // IP-based connection (connect to VM by private IP)
+    disableCopyPaste: false     // Copy and paste enabled
     ipConfigurations: [
       {
         name: 'ipconfig1'
