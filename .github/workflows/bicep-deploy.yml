@@ -20,6 +20,12 @@ permissions:
   id-token: write
   contents: read
 
+# Only one deploy workflow runs at a time per branch.
+# A new push cancels any in-progress run for the same ref.
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   deploy-dev:
     name: Deploy to dev
