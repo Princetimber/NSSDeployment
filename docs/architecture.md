@@ -89,9 +89,12 @@ Each environment has an isolated VNet with non-overlapping address spaces:
 | staging | `10.1.0.0/16` | `10.1.1.0/24` | `10.1.2.0/24` |
 | prod | `10.2.0.0/16` | `10.2.1.0/24` | `10.2.2.0/24` |
 
-The NSG enforces:
-- **Inbound:** Allow HTTPS (443), HTTP (80), SSH (22)
-- **Outbound:** Allow Zscaler hub IP ranges on ports 443 and 12002; DNS on UDP 53
+The NSG enforces five rules:
+- **Inbound:** Allow SSH (22) from any source to subnet1 (`10.2.x.1.0/24`)
+- **Outbound:** Allow HTTPS (443) to Zscaler hub IP ranges (from `destinationAddressPrefixes` param)
+- **Outbound:** Allow HTTPS (443) to Zscaler Remote Support IP `199.168.148.101`
+- **Outbound:** Allow DNS (UDP 53) to any destination
+- **Outbound:** Allow NTP (UDP 123) to any destination
 
 The NAT Gateway is associated with `subnet1` to provide deterministic outbound public IP for the NSS server.
 

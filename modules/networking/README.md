@@ -52,16 +52,13 @@ Deploys the full networking stack for the NSS environment: Network Security Grou
 
 ## NSG rules
 
-| Rule | Direction | Protocol | Port | Action |
-|------|-----------|----------|------|--------|
-| Allow_HTTPS_Inbound | Inbound | TCP | 443 | Allow |
-| Allow_HTTP_Inbound | Inbound | TCP | 80 | Allow |
-| Allow_SSH_Inbound | Inbound | TCP | 22 | Allow |
-| Allow_NSS_Zscaler_Hub_Outbound | Outbound | TCP | 443 | Allow |
-| Allow_Zscaler_CertificateAuthority_Outbound | Outbound | TCP | 443 | Allow |
-| Allow_Zscaler_Software_Updates_Outbound | Outbound | TCP | 443 | Allow |
-| Allow_Zscaler_Remote_Support_Outbound | Outbound | TCP | 12002 | Allow |
-| Allow_DNS_Outbound | Outbound | UDP | 53 | Allow |
+| Rule | Direction | Protocol | Port | Source | Destination | Action |
+|------|-----------|----------|------|--------|-------------|--------|
+| Allow-SSH-Mgmt | Inbound | TCP | 22 | * | 10.2.1.0/24 (subnet1) | Allow |
+| Allow-HTTPS-ZscalerHub | Outbound | TCP | 443 | subnet CIDRs | Zscaler hub IP ranges (`destinationAddressPrefixes` param) | Allow |
+| Allow-Zscaler-RemoteSupport | Outbound | TCP | 443 | subnet CIDRs | 199.168.148.101 | Allow |
+| Allow-DNS | Outbound | UDP | 53 | subnet CIDRs | * | Allow |
+| Allow-NTP | Outbound | UDP | 123 | subnet CIDRs | * | Allow |
 
 ---
 
