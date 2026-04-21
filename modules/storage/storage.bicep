@@ -1,12 +1,12 @@
-@description('Required: storage account name.')
+@description('Required: storage account name (3–24 lowercase alphanumeric).')
 @minLength(3)
 @maxLength(24)
-param storageAccountName string = '${uniqueString(resourceGroup().id)}stga'
+param storageAccountName string
 
-@description('Required: resource location. It defaults to the resource group location.')
+@description('Required: resource location. Defaults to the resource group location.')
 param location string = resourceGroup().location
 
-@description('Optional: storage account SKU. It defaults to Standard_LRS.')
+@description('Optional: storage account SKU. Defaults to Standard_LRS.')
 @allowed([
   'Standard_LRS'
   'Standard_GRS'
@@ -18,64 +18,45 @@ param location string = resourceGroup().location
 ])
 param skuName string = 'Standard_LRS'
 
-@description('Required: storage account kind. It defaults to StorageV2.')
-@allowed([
-  'StorageV2'
-  'BlobStorage'
-  'FileStorage'
-  'BlockBlobStorage'
-])
-param kind string = 'StorageV2'
-
-@description('Optional: storage account access tier. It defaults to Hot.')
-@allowed([
-  'Hot'
-  'Cool'
-])
-param accessTier string = 'Hot'
-
-@description('Optional: environment name (dev | staging | prod). It defaults to dev.')
+@description('Optional: environment name (dev | staging | prod).')
 param environmentName string = 'dev'
-
-@description('Optional: resource display name for the DisplayName resource tag.')
-param displayName string = 'Storage Account'
 
 @description('Optional: owner name for the Owner resource tag.')
 param ownerName string = ''
 
-@description('Optional: tags. It is an object.')
+@description('Optional: tags.')
 param tags object = {
   environment: environmentName
-  DisplayName: displayName
+  DisplayName: 'Storage Account'
   Owner: ownerName
 }
 
-@description('Required: name of the virtual network allowed to access the storage account.')
+@description('Required: name of the virtual network whose subnets are allowed access.')
 param vnetName string
 
-@description('Required: create new or existing storage account. It defaults to new.')
-@allowed([
-  'new'
-  'existing'
-])
-param storageAccountNewOrExisting string = 'new'
-
-@description('Required: names of subnets allowed to access the storage account. It is an array of strings.')
+@description('Required: subnet names allowed to access the storage account.')
 param subnets array
 
-@description('Required: Public IP address allowed to access storage account. It defaults to the IP address of the machine running the deployment.')
+@description('Required: public IP address allowed to access the storage account.')
 param publicIpAddress string
 
-resource storageAccountNew 'Microsoft.Storage/storageAccounts@2025-08-01' = if (storageAccountNewOrExisting == 'new' && storageAccountName != '') {
+// Build the VNet rule list outside the resource to avoid ARM property-iteration
+// issues that arise when a for-loop sits inside a conditional resource's properties.
+var vnetRules = [for subnet in subnets: {
+  id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnetName, subnet)
+  action: 'Allow'
+}]
+
+resource storageAccount 'Microsoft.Storage/storageAccounts@2025-08-01' = {
   name: storageAccountName
   location: location
   tags: tags
-  kind: kind
+  kind: 'StorageV2'
   sku: {
     name: skuName
   }
   properties: {
-    accessTier: accessTier
+    accessTier: 'Hot'
     supportsHttpsTrafficOnly: true
     minimumTlsVersion: 'TLS1_2'
     allowBlobPublicAccess: false
@@ -83,10 +64,7 @@ resource storageAccountNew 'Microsoft.Storage/storageAccounts@2025-08-01' = if (
     networkAcls: {
       bypass: 'AzureServices'
       defaultAction: 'Deny'
-      virtualNetworkRules: [for subnet in subnets: {
-        id: resourceId('Microsoft.Network/virtualNetworks/subnets', vnetName, subnet)
-        action: 'Allow'
-      }]
+      virtualNetworkRules: vnetRules
       ipRules: [
         {
           value: publicIpAddress
@@ -97,11 +75,5 @@ resource storageAccountNew 'Microsoft.Storage/storageAccounts@2025-08-01' = if (
   }
 }
 
-resource storageAccountExisting 'Microsoft.Storage/storageAccounts@2025-08-01' existing = if (storageAccountNewOrExisting == 'existing' && storageAccountName != '') {
-  name: storageAccountName
-}
-
-var resolvedAccountName = storageAccountNewOrExisting == 'new' ? storageAccountNew.name : storageAccountExisting.name
-
-output storageAccountId string = storageAccountNewOrExisting == 'new' ? storageAccountNew.id : storageAccountExisting.id
-output storageAccountName string = resolvedAccountName
+output storageAccountId string = storageAccount.id
+output storageAccountName string = storageAccount.name

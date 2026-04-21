@@ -93,7 +93,6 @@ module storage './modules/storage/main.bicep' = {
     location: location
     environmentName: environmentName
     projectName: projectName
-    tags: tags
     storageAccountName: storageAccountName
     vnetName: vnetName
     subnets: subnets

@@ -15,13 +15,6 @@ param projectName string
 @description('Optional: owner name for the Owner resource tag.')
 param ownerName string = ''
 
-@description('Resource tags.')
-param tags object = {
-  environment: environmentName
-  DisplayName: projectName
-  Owner: ownerName
-}
-
 @description('Required: storage account name (3–24 lowercase alphanumeric).')
 param storageAccountName string
 
@@ -40,7 +33,6 @@ module storageAccount './storage.bicep' = {
     storageAccountName: storageAccountName
     location: location
     environmentName: environmentName
-    tags: tags
     ownerName: ownerName
     vnetName: vnetName
     subnets: subnets
